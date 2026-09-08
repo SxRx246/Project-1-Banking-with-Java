@@ -1,5 +1,8 @@
 package bankingSystem;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.SecureRandom;
 import java.io.*;
 import java.util.Scanner;
 
@@ -12,6 +15,18 @@ public class SignUp {
         this.username = username;
         this.password = password;
         role = "Customer";
+    }
+
+    public static String hashPassword(String password, byte[] salt) throws Exception {
+        PBEKeySpec spec =
+                new PBEKeySpec(password.toCharArray(), salt, 10000, 256);
+
+        SecretKeyFactory factory =
+                SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+        return java.util.HexFormat.of().formatHex(
+                factory.generateSecret(spec).getEncoded()
+        );
     }
 
     public static void main(String[] args) {
@@ -45,15 +60,45 @@ public class SignUp {
             System.out.print("Password: ");
             String password = scanner.nextLine();
             System.out.println();
+            if (password.length() < 8 ||
+                    !password.matches(".*[A-Z].*") ||
+                    !password.matches(".*[a-z].*") ||
+                    !password.matches(".*[0-9].*")) {
+
+                System.out.println(
+                        "Password must be at least 8 characters " +
+                                "and contain uppercase, lowercase, and a number."
+                );
+
+                scanner.close();
+                return;
+            }
             System.out.print("confirmed Password: ");
             String confirmedPassword = scanner.nextLine();
 
             if (password.equals(confirmedPassword)) {
-                SignUp account = new SignUp(username, password);
+                // Generate salt
+                byte[] salt = new byte[16];
+                new SecureRandom().nextBytes(salt);
+
+                // Hash password
+                String hashedPassword = hashPassword(password, salt);
+
+                // Convert salt to String
+                String saltString =
+                        java.util.HexFormat.of().formatHex(salt);
+
+                SignUp account = new SignUp(username, hashedPassword);
 
                 FileWriter writer = new FileWriter("accounts.txt", true);
 
-                writer.write(account.username + "," + account.password + "," + account.role);
+                writer.write(
+                        account.username + "," +
+                                saltString + "," +
+                                hashedPassword + "," +
+                                account.role
+                );
+
                 writer.write("\n");
 
                 writer.close();
@@ -64,7 +109,7 @@ public class SignUp {
             System.out.println("Passwords do not match");
         }
 
-    } catch (IOException e) {
+        } catch (Exception e) {
         System.out.println("Error accessing account file.");
     }
 
