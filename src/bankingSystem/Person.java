@@ -3,12 +3,14 @@ package bankingSystem;
 public class Person {
     private String firstName;
     private String lastName;
-    private String role;
+    private enum role {
+        banker,
+        customer
+    }
 
-    public Person(String firstName, String lastName, String role) {
+    public Person(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
     }
 
     public void changeRole(){

@@ -5,11 +5,10 @@ public class BankAccount {
         CHECKING,
         SAVINGS
     }
+    private String userEmail;
     private String accountNumber;
     private double balance;
 
 
-//    later on
-//    AccountType type = AccountType.CHECKING;
-//    AccountType type = AccountType.SAVINGS;
+
 }

@@ -9,7 +9,7 @@ public class Customer extends Person{
 //    HashMap<String,Double> accounts = new HashMap<>();
 
     public Customer(String firstName, String lastName, String role) {
-        super(firstName, lastName, role);
+        super(firstName, lastName);
 //        this.accounts = accounts;
     }
 

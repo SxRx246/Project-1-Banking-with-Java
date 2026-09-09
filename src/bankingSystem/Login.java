@@ -47,6 +47,10 @@ public class Login {
 
                     if (loggedIn) {
                         System.out.println("You are logged in");
+
+                        Login login = new Login();
+                        login.displayBankAccounts(email);
+
                         break;
                     } else {
                         System.out.println("Incorrect email or password");
@@ -63,6 +67,44 @@ public class Login {
             scanner.close();
 
 }
+public void displayBankAccounts(String email){
+            File file2 = new File("bankAccounts.txt");
+            boolean hasBankAccount = false;
+            int bankAcounts = 0;
+            if (file2.exists()) {
+                try {
+                    Scanner fileScanner2 = new Scanner(file2);
+
+                    while (fileScanner2.hasNextLine()) {
+                        String line = fileScanner2.nextLine();
+
+                        String accountNumber = line.split(",")[0];
+                        String existingEmail = line.split(",")[1];
+                        String accountType = line.split(",")[2];
+                        double balance = Double.parseDouble(line.split(",")[3]);
+
+                        if (existingEmail.equalsIgnoreCase(email)) {
+                            hasBankAccount = true;
+                            bankAcounts ++;
+                            System.out.println("\n------Account" + bankAcounts + "------");
+                            System.out.println("Account Number: " + accountNumber);
+                            System.out.println("Account Type: " + accountType);
+                            System.out.println("Balance: " + balance);
+                        }
+                    }
+                    fileScanner2.close();
+                    if (!hasBankAccount){
+                        System.out.println("You don't have any bank account yet");
+                    }
+                } catch (FileNotFoundException e) {
+                    System.out.println("Error reading accounts file.");
+
+                }
+            }
+            else {
+                System.out.println("bankAccounts.txt does not exist.");
+            }
+        }
+    }
 
 
-}
