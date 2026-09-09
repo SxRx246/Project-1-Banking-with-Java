@@ -7,12 +7,16 @@ import java.io.*;
 import java.util.Scanner;
 
 public class SignUp {
-    private String username;
+    private String firstName;
+    private String lastName;
+    private String email;
     private String password;
     private String role;
 
-    public SignUp(String username, String password) {
-        this.username = username;
+    public SignUp(String firstName,String lastName,String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
         this.password = password;
         role = "Customer";
     }
@@ -34,11 +38,24 @@ public class SignUp {
         boolean signupSuccessful = false;
         while (true) {
         System.out.println("------Sign up------");
-            System.out.print("Username: ");
-            String username = scanner.nextLine();
+            System.out.print("First Name: ");
+            String firstName = scanner.nextLine();
+
+            System.out.print("Last Name: ");
+            String lastName = scanner.nextLine();
+
+            System.out.print("Email: ");
+            String email = scanner.nextLine();
+
+            if(!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")){
+                System.out.println("Invalid email address.");
+                continue;
+            }
 
             try {
                 File file = new File("accounts.txt");
+
+                boolean emailExists = false;
 
                 if (file.exists()) {
                     Scanner fileScanner = new Scanner(file);
@@ -46,12 +63,12 @@ public class SignUp {
                     while (fileScanner.hasNextLine()) {
                         String line = fileScanner.nextLine();
 
-                        String existingUsername = line.split(",")[0];
+                        String existingEmail = line.split(",")[2];
 
-                        if (existingUsername.equals(username)) {
-                            System.out.println("Username already exists.");
+                        if (existingEmail.equals(email)) {
+                            System.out.println("Email already been used.");
                             fileScanner.close();
-                            continue;
+                            break;
 //                            return;
                         }
                     }
@@ -65,7 +82,7 @@ public class SignUp {
                 if (password.length() < 8 ||
                         !password.matches(".*[A-Z].*") ||
                         !password.matches(".*[a-z].*") ||
-                        !password.matches(".*[!@#&()–[{}]:;',?/*~$^+=<>].*") ||
+                        !password.matches(".*[!@#$%^&*()_+\\-=<>?].*") ||
                         !password.matches(".*[0-9].*")) {
 
                     System.out.println(
@@ -92,12 +109,14 @@ public class SignUp {
                     String saltString =
                             java.util.HexFormat.of().formatHex(salt);
 
-                    SignUp account = new SignUp(username, hashedPassword);
+                    SignUp account = new SignUp(firstName,lastName, email, hashedPassword);
 
                     FileWriter writer = new FileWriter("accounts.txt", true);
 
                     writer.write(
-                            account.username + "," +
+                            account.firstName + "," +
+                            account.lastName + "," +
+                            account.email + "," +
                                     saltString + "," +
                                     hashedPassword + "," +
                                     account.role

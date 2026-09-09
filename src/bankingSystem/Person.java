@@ -10,4 +10,8 @@ public class Person {
         this.lastName = lastName;
         this.role = role;
     }
+
+    public void changeRole(){
+
+    }
 }
