@@ -3,6 +3,15 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Login {
+    private String email;
+    public Login(String email) {
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
     public static void main(String[] args) throws Exception{
         Scanner scanner = new Scanner(System.in);
 
@@ -48,9 +57,14 @@ public class Login {
                     if (loggedIn) {
                         System.out.println("You are logged in");
 
-                        Login login = new Login();
-                        login.displayBankAccounts(email);
+                        Login loggedInUser = new Login(email);
+                        Session.setLoggedInUser(loggedInUser);
 
+                        loggedInUser.displayBankAccounts();
+
+                        BankAccount.main(new String[]{});
+
+//                        loggedInUser.displayBankAccounts();
                         break;
                     } else {
                         System.out.println("Incorrect email or password");
@@ -67,7 +81,7 @@ public class Login {
             scanner.close();
 
 }
-public void displayBankAccounts(String email){
+public void displayBankAccounts(){
             File file2 = new File("bankAccounts.txt");
             boolean hasBankAccount = false;
             int bankAcounts = 0;
@@ -83,7 +97,7 @@ public void displayBankAccounts(String email){
                         String accountType = line.split(",")[2];
                         double balance = Double.parseDouble(line.split(",")[3]);
 
-                        if (existingEmail.equalsIgnoreCase(email)) {
+                        if (existingEmail.equalsIgnoreCase(this.email)) {
                             hasBankAccount = true;
                             bankAcounts ++;
                             System.out.println("\n------Account" + bankAcounts + "------");
