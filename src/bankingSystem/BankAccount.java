@@ -125,6 +125,50 @@ public class BankAccount {
 
     }
 
+    public static void depositMoney(double amount, BankAccount bankAccount){
+        double currentBalance = bankAccount.getBalance();
+        double balance;
+
+            balance = currentBalance + amount;
+            bankAccount.setBalance(balance);
+
+            File file = new File("bankAccounts.txt");
+
+            if (file.exists()) {
+                try {
+                    Scanner fileScanner = new Scanner(file);
+                    ArrayList<String> lines = new ArrayList<>();
+
+                    while (fileScanner.hasNextLine()) {
+                        String line = fileScanner.nextLine();
+
+                        String[] fields = line.split(",");
+                        if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
+                            fields[2] = String.valueOf(bankAccount.getBalance());
+                            line = String.join(",", fields);
+                        }
+                        lines.add(line);
+                    }
+                    fileScanner.close();
+
+                    FileWriter writer = new FileWriter(file);
+
+                    for (String line : lines) {
+                        writer.write(line + "\n");
+                    }
+
+                    writer.close();
+
+                    System.out.println("Successful Deposit of "+ amount + "BD");
+                    System.out.println("Balance now in account "+ bankAccount.getAccountNumber() +" is "+ bankAccount.getBalance());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+
 //    public String addNewAccount(){
 //        Random random = new Random();
 //        int accountNumber = 100000 + random.nextInt(900000);
@@ -280,7 +324,7 @@ public class BankAccount {
                 double balance = Double.parseDouble(line.split(",")[2]);
                 AccountType accountType = AccountType.valueOf(line.split(",")[3]);
                 if(numberOfAccounts == 1){
-                    if (existingEmail.equals(email)) {
+                    if (existingEmail.equalsIgnoreCase(email)) {
                         currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType);
 
 //                        fileScanner.close();
@@ -292,7 +336,7 @@ public class BankAccount {
 //                    int accontNumber = scanner.nextInt();
 //                    scanner.nextLine();
 
-                    if (existingEmail.equals(email) && existingAccountNumber == accontNumber) {
+                    if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accontNumber) {
                         currentBankAccount = new BankAccount(existingEmail, accontNumber, balance, accountType);
 
 //                        fileScanner.close();
@@ -315,14 +359,18 @@ public class BankAccount {
                 char transaction = scanner.next().charAt(0);
                 scanner.nextLine();
 
+                double amount = 0;
                 if(transaction == 'w' || transaction == 'W'){
                     System.out.print("how much money you want to withdraw?");
-                    double amount = scanner.nextDouble();
+                    amount = scanner.nextDouble();
                     scanner.nextLine();
                     withdrawMoney(amount, currentBankAccount);
                 }
                 else if(transaction == 'd' || transaction == 'D'){
-
+                    System.out.print("how much money you want to deposit?");
+                    amount = scanner.nextDouble();
+                    scanner.nextLine();
+                    depositMoney(amount, currentBankAccount);
                 }
                 else if(transaction == 't' || transaction == 'T'){
 
