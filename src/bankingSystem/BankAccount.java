@@ -167,6 +167,61 @@ public class BankAccount {
             }
         }
 
+    public static void TransferMoney(double amount, BankAccount myBankAccount, BankAccount toBankAccount){
+        double myCurrentBalance = myBankAccount.getBalance();
+        double myBalance;
+
+        if(amount<=0){
+            System.out.println("please enter valid amount");
+        }
+        else if(myCurrentBalance < amount){
+            System.out.println("You have only "+ myCurrentBalance + " in your account");
+        }
+        else if(myCurrentBalance>= amount) {
+            myBalance = myCurrentBalance - amount;
+            myBankAccount.setBalance(myBalance);
+            toBankAccount.setBalance(toBankAccount.getBalance()+amount);
+
+            File file = new File("bankAccounts.txt");
+
+            if (file.exists()) {
+                try {
+                    Scanner fileScanner = new Scanner(file);
+                    ArrayList<String> lines = new ArrayList<>();
+
+                    while (fileScanner.hasNextLine()) {
+                        String line = fileScanner.nextLine();
+
+                        String[] fields = line.split(",");
+                        if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
+                            fields[2] = String.valueOf(myBankAccount.getBalance());
+                            line = String.join(",", fields);
+                        }
+                        else if(fields[0].equals(String.valueOf(toBankAccount.getAccountNumber()))) {
+                            fields[2] = String.valueOf(toBankAccount.getBalance());
+                            line = String.join(",", fields);
+                        }
+                        lines.add(line);
+                    }
+                    fileScanner.close();
+
+                    FileWriter writer = new FileWriter(file);
+
+                    for (String line : lines) {
+                        writer.write(line + "\n");
+                    }
+
+                    writer.close();
+
+                    System.out.println("Successful Transfer of "+ amount + "BD");
+                    System.out.println("Balance now in account "+ myBankAccount.getAccountNumber() +" is "+ myBankAccount.getBalance());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
 
 
 //    public String addNewAccount(){
