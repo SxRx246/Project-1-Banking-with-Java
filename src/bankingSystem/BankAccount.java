@@ -1,6 +1,7 @@
 package bankingSystem;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
@@ -18,12 +19,14 @@ public class BankAccount {
     private double balance;
     Login loggedInUser;
     private String email;
+    private String password;
 
     public BankAccount(String email, int accountNumber, double balance, AccountType accountType) {
         this.email = email;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.accountType = accountType;
+
     }
 
     public String getUserEmail() {
@@ -38,24 +41,25 @@ public class BankAccount {
         return balance;
     }
 
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
     public static void addingAccountTofile(BankAccount bankAccount){
         File file2 = new File("bankAccounts.txt");
         try {
             Scanner fileScanner = new Scanner(file2);
 
-//            while (fileScanner.hasNextLine()) {
-//                String line = fileScanner.nextLine();
-//
-//                String email = line.split(",")[2];
-//
-//                if(email)
-
             FileWriter writer = new FileWriter("bankAccounts.txt", true);
             writer.write(
                     bankAccount.getAccountNumber() + "," +
                             bankAccount.getUserEmail() + "," +
-                            bankAccount.getAccountNumber() + "," +
-                            bankAccount.getBalance()
+                            bankAccount.getBalance() + "," +
+                            bankAccount.getAccountType()
             );
 
             writer.write("\n");
@@ -66,6 +70,50 @@ public class BankAccount {
         catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void withdrawMoney(double amount, BankAccount bankAccount){
+        double currentBalance = bankAccount.getBalance();
+        double balance = currentBalance - amount;
+
+        if(amount<=0){
+            System.out.println("please enter valid amount");
+        }
+        else if(currentBalance < amount){
+            System.out.println("You have only "+ currentBalance + " in your account");
+        }
+        else if(currentBalance>= amount) {
+            bankAccount.setBalance(balance);
+
+            File file = new File("bankAccounts.txt");
+
+            if (file.exists()) {
+                Scanner fileScanner = null;
+                try {
+                    fileScanner = new Scanner(file);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    String existingEmail = line.split(",")[1];
+
+                    if (existingEmail.equals(bankAccount.email)) {
+                        String[] fields = line.split(",");
+                        fields[2] = String.valueOf(bankAccount.getBalance());
+                        line = String.join(",", fields);
+                        System.out.println("Successful Withdraw of "+ amount + "BD");
+                        fileScanner.close();
+                        break;
+                        //
+                    }
+                }
+                fileScanner.close();
+            }
+        }
+
     }
 
 
