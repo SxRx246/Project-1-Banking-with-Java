@@ -81,7 +81,7 @@ public class Login {
             scanner.close();
 
 }
-public void displayBankAccounts(){
+public int displayBankAccounts(){
             File file2 = new File("bankAccounts.txt");
             boolean hasBankAccount = false;
             int bankAcounts = 0;
@@ -94,8 +94,8 @@ public void displayBankAccounts(){
 
                         String accountNumber = line.split(",")[0];
                         String existingEmail = line.split(",")[1];
-                        String accountType = line.split(",")[2];
-                        double balance = Double.parseDouble(line.split(",")[3]);
+                        String balance = String.valueOf(line.split(",")[2]);
+                        String accountType = line.split(",")[3];
 
                         if (existingEmail.equalsIgnoreCase(this.email)) {
                             hasBankAccount = true;
@@ -118,6 +118,7 @@ public void displayBankAccounts(){
             else {
                 System.out.println("bankAccounts.txt does not exist.");
             }
+            return bankAcounts;
         }
     }
 
