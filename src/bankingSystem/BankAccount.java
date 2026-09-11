@@ -14,6 +14,7 @@ public class BankAccount {
         CHECKING,
         SAVINGS
     }
+
     private AccountType accountType;
     private int accountNumber;
     private double balance;
@@ -51,7 +52,7 @@ public class BankAccount {
         this.balance = balance;
     }
 
-    public static void addingAccountTofile(BankAccount bankAccount){
+    public static void addingAccountTofile(BankAccount bankAccount) {
         File file2 = new File("bankAccounts.txt");
         try {
             Scanner fileScanner = new Scanner(file2);
@@ -68,68 +69,21 @@ public class BankAccount {
             writer.close();
             System.out.println("The account has been created");
 
-    }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void withdrawMoney(double amount, BankAccount bankAccount){
+    public static void withdrawMoney(double amount, BankAccount bankAccount) {
         double currentBalance = bankAccount.getBalance();
         double balance;
 
-        if(amount<=0){
+        if (amount <= 0) {
             System.out.println("please enter valid amount");
-        }
-        else if(currentBalance < amount){
-            System.out.println("You have only "+ currentBalance + " in your account");
-        }
-        else if(currentBalance>= amount) {
+        } else if (currentBalance < amount) {
+            System.out.println("You have only " + currentBalance + " in your account");
+        } else if (currentBalance >= amount) {
             balance = currentBalance - amount;
-            bankAccount.setBalance(balance);
-
-            File file = new File("bankAccounts.txt");
-
-            if (file.exists()) {
-                try {
-                    Scanner fileScanner = new Scanner(file);
-                    ArrayList<String> lines = new ArrayList<>();
-
-                while (fileScanner.hasNextLine()) {
-                    String line = fileScanner.nextLine();
-
-                    String[] fields = line.split(",");
-                    if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
-                        fields[2] = String.valueOf(bankAccount.getBalance());
-                        line = String.join(",", fields);
-                    }
-                    lines.add(line);
-                }
-                fileScanner.close();
-
-                FileWriter writer = new FileWriter(file);
-
-                for (String line : lines) {
-                    writer.write(line + "\n");
-                }
-
-                writer.close();
-
-                System.out.println("Successful Withdraw of "+ amount + "BD");
-                System.out.println("Balance now in account "+ bankAccount.getAccountNumber() +" is "+ bankAccount.getBalance());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-    }
-
-    public static void depositMoney(double amount, BankAccount bankAccount){
-        double currentBalance = bankAccount.getBalance();
-        double balance;
-
-            balance = currentBalance + amount;
             bankAccount.setBalance(balance);
 
             File file = new File("bankAccounts.txt");
@@ -159,25 +113,76 @@ public class BankAccount {
 
                     writer.close();
 
-                    System.out.println("Successful Deposit of "+ amount + "BD");
-                    System.out.println("Balance now in account "+ bankAccount.getAccountNumber() +" is "+ bankAccount.getBalance());
+                    System.out.println("Successful Withdraw of " + amount + "BD");
+                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-    public static void transferMoney(BankAccount myBankAccount, int accountNumber, double amount){
+    }
+
+    public static void depositMoney(double amount, BankAccount bankAccount) {
+        double currentBalance = bankAccount.getBalance();
+        double balance;
+
+        balance = currentBalance + amount;
+        bankAccount.setBalance(balance);
+
+        File file = new File("bankAccounts.txt");
+
+        if (file.exists()) {
+            try {
+                Scanner fileScanner = new Scanner(file);
+                ArrayList<String> lines = new ArrayList<>();
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    String[] fields = line.split(",");
+                    if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
+                        fields[2] = String.valueOf(bankAccount.getBalance());
+                        line = String.join(",", fields);
+                    }
+                    lines.add(line);
+                }
+                fileScanner.close();
+
+                FileWriter writer = new FileWriter(file);
+
+                for (String line : lines) {
+                    writer.write(line + "\n");
+                }
+
+                writer.close();
+
+                System.out.println("Successful Deposit of " + amount + "BD");
+                System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void transferMoney(BankAccount myBankAccount, int accountNumber, double amount) {
+
+        if (myBankAccount.getAccountNumber() == accountNumber) {
+            System.out.println("you can't transfer to the same account");
+            return;
+        }
+
         double myCurrentBalance = myBankAccount.getBalance();
         double myBalance;
 
-        if(amount<=0){
+        if (amount <= 0) {
             System.out.println("please enter valid amount");
-        }
-        else if(myCurrentBalance < amount){
-            System.out.println("You have only "+ myCurrentBalance + " in your account");
-        }
-        else if(myCurrentBalance>= amount) {
+            return;
+        } else if (myCurrentBalance < amount) {
+            System.out.println("Transfer failed. You don't have enough balance.");
+            System.out.println("You have only " + myCurrentBalance + " in your account");
+            return;
+        } else if (myCurrentBalance >= amount) {
             myBalance = myCurrentBalance - amount;
             myBankAccount.setBalance(myBalance);
 //            toBankAccount.setBalance(toBankAccount.getBalance()+amount);
@@ -196,10 +201,9 @@ public class BankAccount {
                         if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
                             fields[2] = String.valueOf(myBankAccount.getBalance());
                             line = String.join(",", fields);
-                        }
-                        else if(fields[0].equals(String.valueOf(accountNumber))) {
+                        } else if (fields[0].equals(String.valueOf(accountNumber))) {
                             double ToAccountBalance = Double.parseDouble(fields[2]);
-                                   ToAccountBalance += amount;
+                            ToAccountBalance += amount;
                             fields[2] = String.valueOf(ToAccountBalance);
                             line = String.join(",", fields);
                         }
@@ -215,8 +219,8 @@ public class BankAccount {
 
                     writer.close();
 
-                    System.out.println("Successful Transfer of "+ amount + "BD");
-                    System.out.println("Balance now in account "+ myBankAccount.getAccountNumber() +" is "+ myBankAccount.getBalance());
+                    System.out.println("Successful Transfer of " + amount + "BD");
+                    System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -224,71 +228,6 @@ public class BankAccount {
         }
 
     }
-
-
-//    public String addNewAccount(){
-//        Random random = new Random();
-//        int accountNumber = 100000 + random.nextInt(900000);
-//
-//        AccountType accountType = null;
-//        System.out.println("Account Type Checking or Saving?(Enter C or S)");
-//        char checkAccountType = scanner.next().charAt(0);
-//
-////        AccountType accountType;
-//        if(checkAccountType== 'c' || checkAccountType=='C'){
-//            accountType = AccountType.CHECKING;
-//        }
-//        else if(checkAccountType=='s' || checkAccountType=='S'){
-//            accountType = AccountType.SAVINGS;
-//        }
-//        else {
-//            System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
-////                checkAccountType = scanner.next().charAt(0);
-////            return;
-//        }
-//
-//        System.out.println("Enter the initial deposit amount: ");
-//        double balance = scanner.nextDouble();
-//
-////        BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType);
-//        return bankAccount;
-//    }
-
-//    public List<BankAccount> loggedInUserAccounts(){
-//        List<BankAccount> bankAccounts;
-//        File file2 = new File("bankAccounts.txt");
-//        if (file2.exists()) {
-//            try {
-//                Scanner fileScanner2 = new Scanner(file2);
-//
-//                while (fileScanner2.hasNextLine()) {
-//                    String line = fileScanner2.nextLine();
-//
-//                    String accountNumber = line.split(",")[0];
-//                    String existingEmail = line.split(",")[1];
-//                    String accountType = line.split(",")[2];
-//                    String balance = String.valueOf(line.split(",")[3]);
-//
-//                    if (existingEmail.equalsIgnoreCase(email)) {
-//
-//                    }
-//                }
-//                fileScanner2.close();
-//            } catch (FileNotFoundException e) {
-//                System.out.println("Error reading accounts file.");
-//
-//            }
-//        }
-//        else {
-//            System.out.println("bankAccounts.txt does not exist.");
-//        }
-//        bankAccounts = new ArrayList<>(
-//
-//        );
-//        return bankAccounts;
-//    }
-
-
 
 
     public static void main(String[] args) {
@@ -307,7 +246,7 @@ public class BankAccount {
         String addAccount = scanner.nextLine();
 
 
-        if(addAccount.equalsIgnoreCase("yes")) {
+        if (addAccount.equalsIgnoreCase("yes")) {
             Random random = new Random();
             int accountNumber = 100000 + random.nextInt(900000);
 
@@ -315,15 +254,12 @@ public class BankAccount {
             char checkAccountType = scanner.next().charAt(0);
 
             AccountType accountType;
-            if(checkAccountType== 'c' || checkAccountType=='C'){
+            if (checkAccountType == 'c' || checkAccountType == 'C') {
                 accountType = AccountType.CHECKING;
-            }
-            else if(checkAccountType=='s' || checkAccountType=='S'){
+            } else if (checkAccountType == 's' || checkAccountType == 'S') {
                 accountType = AccountType.SAVINGS;
-            }
-            else {
+            } else {
                 System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
-//                checkAccountType = scanner.next().charAt(0);
                 return;
             }
 
@@ -332,105 +268,89 @@ public class BankAccount {
             scanner.nextLine();
 
             BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType);
-//            BankAccount bankAccount = addNewAccount();
 
             addingAccountTofile(bankAccount);
         }
 
-            boolean startTransaction = false;
-            System.out.println("Do you want to start a transaction?(yes or no)");
-            String check = scanner.nextLine();
+        boolean startTransaction = false;
+        System.out.print("Do you want to start a transaction?(yes or no)");
+        String check = scanner.nextLine();
 
-            if(check.equalsIgnoreCase("yes")){
-                startTransaction = true;
-            }
-            else if(!check.equalsIgnoreCase("No")){
-                System.out.println("Please enter yes or no");
-            }
+        if (check.equalsIgnoreCase("yes")) {
+            startTransaction = true;
+        } else if (!check.equalsIgnoreCase("No")) {
+            System.out.println("Please enter yes or no");
+        }
 
-
-
-//        loggedInUser.displayBankAccounts();
-
-
-        BankAccount currentBankAccount = null;
 
         int numberOfAccounts = loggedInUser.displayBankAccounts();
 
-        File file = new File("bankAccounts.txt");
 
-        if (file.exists()) {
-            Scanner fileScanner = null;
-            try {
-                fileScanner = new Scanner(file);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            int accontNumber = 0;
-             if(numberOfAccounts > 1) {
-                 System.out.println("You have multiple bank accounts.");
-                 System.out.print("Please enter the account number you want to use for the transaction: ");
-                accontNumber = scanner.nextInt();
-                scanner.nextLine();
-            }
+        while (startTransaction) {
+            BankAccount currentBankAccount = null;
+            int accountNumber;
 
-            while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine();
+            File file = new File("bankAccounts.txt");
 
-                int existingAccountNumber = Integer.parseInt(line.split(",")[0]);
-                String existingEmail = line.split(",")[1];
-                double balance = Double.parseDouble(line.split(",")[2]);
-                AccountType accountType = AccountType.valueOf(line.split(",")[3]);
-                if(numberOfAccounts == 1){
-                    if (existingEmail.equalsIgnoreCase(email)) {
-                        currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType);
+            if (file.exists()) {
 
-//                        fileScanner.close();
-                        break;
-                    }
+                if (numberOfAccounts > 1) {
+                    System.out.println("You have multiple bank accounts.");
+                    System.out.print("Please enter the account number you want to use for the transaction: ");
+                    accountNumber = scanner.nextInt();
+                    scanner.nextLine();
+                } else {
+                    accountNumber = 0;
                 }
-                else if(numberOfAccounts > 1) {
-//                    System.out.println("Enter your bank account number that you want to do transactions with: ");
-//                    int accontNumber = scanner.nextInt();
-//                    scanner.nextLine();
+                try {
+                    Scanner fileScanner = new Scanner(file);
+                    while (fileScanner.hasNextLine()) {
+                        String line = fileScanner.nextLine();
 
-                    if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accontNumber) {
-                        currentBankAccount = new BankAccount(existingEmail, accontNumber, balance, accountType);
+                        int existingAccountNumber = Integer.parseInt(line.split(",")[0]);
+                        String existingEmail = line.split(",")[1];
+                        double balance = Double.parseDouble(line.split(",")[2]);
+                        AccountType accountType = AccountType.valueOf(line.split(",")[3]);
+                        if (numberOfAccounts == 1) {
+                            if (existingEmail.equalsIgnoreCase(email)) {
+                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType);
 
-//                        fileScanner.close();
-                        break;
+                                break;
+                            }
+                        } else if (numberOfAccounts > 1) {
+                            if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accountNumber) {
+                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType);
+
+                                break;
+                            }
+                        }
                     }
+                    fileScanner.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("Error reading bank account file.");
                 }
-            }
-            fileScanner.close();
-        }
 
-//        if(accontNumber ==  )
-        if (currentBankAccount == null) {
-            System.out.println("Account could not be found.");
-            return;
-        }
-        else {
+                if (currentBankAccount == null) {
+                    System.out.println("Account could not be found.");
+                    continue;
+                }
 
-            while(startTransaction){
                 System.out.println("Withdraw money(w), Deposit Money(d), Transfer Money(t). (Enter w or d or t)");
                 char transaction = scanner.next().charAt(0);
                 scanner.nextLine();
 
                 double amount = 0;
-                if(transaction == 'w' || transaction == 'W'){
+                if (transaction == 'w' || transaction == 'W') {
                     System.out.print("how much money you want to withdraw?");
                     amount = scanner.nextDouble();
                     scanner.nextLine();
                     withdrawMoney(amount, currentBankAccount);
-                }
-                else if(transaction == 'd' || transaction == 'D'){
+                } else if (transaction == 'd' || transaction == 'D') {
                     System.out.print("how much money you want to deposit?");
                     amount = scanner.nextDouble();
                     scanner.nextLine();
                     depositMoney(amount, currentBankAccount);
-                }
-                else if(transaction == 't' || transaction == 'T'){
+                } else if (transaction == 't' || transaction == 'T') {
                     System.out.print("how much money you want to transfer?");
                     amount = scanner.nextDouble();
                     scanner.nextLine();
@@ -438,8 +358,7 @@ public class BankAccount {
                     int toAccountNumber = scanner.nextInt();
                     scanner.nextLine();
                     transferMoney(currentBankAccount, toAccountNumber, amount);
-                }
-                else {
+                } else {
                     System.out.println("Please enter valid type of transaction(w or d or t), w for Withdraw Money, d for Deposit Money, t for Transfer Money");
                     return;
                 }
@@ -447,13 +366,11 @@ public class BankAccount {
                 System.out.println("Do you want to have another transaction in this account? (yes or no");
                 String check2 = scanner.nextLine();
 
-                if(check2.equalsIgnoreCase("No")){
+                if (check2.equalsIgnoreCase("No")) {
                     startTransaction = false;
-                }
-                else if(check2.equalsIgnoreCase("yes")){
+                } else if (check2.equalsIgnoreCase("yes")) {
                     continue;
-                }
-                else{
+                } else {
                     System.out.println("please enter (yes or no)");
                     return;
                 }
@@ -462,15 +379,6 @@ public class BankAccount {
 
         }
 
-
-//        }
-//        else if(addAccount.equalsIgnoreCase("No")){
-//
-//        }
-//        else {
-//            System.out.println("please enter valid input weather 'yes' or 'No': ");
-//            return;
-//        }
     }
 
 }

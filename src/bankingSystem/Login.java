@@ -1,9 +1,11 @@
 package bankingSystem;
+
 import java.io.*;
 import java.util.Scanner;
 
 public class Login {
     private String email;
+
     public Login(String email) {
         this.email = email;
     }
@@ -12,7 +14,7 @@ public class Login {
         return email;
     }
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -78,48 +80,48 @@ public class Login {
                 System.out.println("No accounts have been created yet.");
             }
         }
-            scanner.close();
+        scanner.close();
 
-}
-public int displayBankAccounts(){
-            File file2 = new File("bankAccounts.txt");
-            boolean hasBankAccount = false;
-            int bankAcounts = 0;
-            if (file2.exists()) {
-                try {
-                    Scanner fileScanner2 = new Scanner(file2);
-
-                    while (fileScanner2.hasNextLine()) {
-                        String line = fileScanner2.nextLine();
-
-                        String accountNumber = line.split(",")[0];
-                        String existingEmail = line.split(",")[1];
-                        String balance = String.valueOf(line.split(",")[2]);
-                        String accountType = line.split(",")[3];
-
-                        if (existingEmail.equalsIgnoreCase(this.email)) {
-                            hasBankAccount = true;
-                            bankAcounts ++;
-                            System.out.println("\n------Account" + bankAcounts + "------");
-                            System.out.println("Account Number: " + accountNumber);
-                            System.out.println("Account Type: " + accountType);
-                            System.out.println("Balance: " + balance);
-                        }
-                    }
-                    fileScanner2.close();
-                    if (!hasBankAccount){
-                        System.out.println("You don't have any bank account yet");
-                    }
-                } catch (FileNotFoundException e) {
-                    System.out.println("Error reading accounts file.");
-
-                }
-            }
-            else {
-                System.out.println("bankAccounts.txt does not exist.");
-            }
-            return bankAcounts;
-        }
     }
+
+    public int displayBankAccounts() {
+        File file2 = new File("bankAccounts.txt");
+        boolean hasBankAccount = false;
+        int bankAcounts = 0;
+        if (file2.exists()) {
+            try {
+                Scanner fileScanner2 = new Scanner(file2);
+
+                while (fileScanner2.hasNextLine()) {
+                    String line = fileScanner2.nextLine();
+
+                    String accountNumber = line.split(",")[0];
+                    String existingEmail = line.split(",")[1];
+                    String balance = String.valueOf(line.split(",")[2]);
+                    String accountType = line.split(",")[3];
+
+                    if (existingEmail.equalsIgnoreCase(this.email)) {
+                        hasBankAccount = true;
+                        bankAcounts++;
+                        System.out.println("\n------Account" + bankAcounts + "------");
+                        System.out.println("Account Number: " + accountNumber);
+                        System.out.println("Account Type: " + accountType);
+                        System.out.println("Balance: " + balance);
+                    }
+                }
+                fileScanner2.close();
+                if (!hasBankAccount) {
+                    System.out.println("You don't have any bank account yet");
+                }
+            } catch (FileNotFoundException e) {
+                System.out.println("Error reading accounts file.");
+
+            }
+        } else {
+            System.out.println("bankAccounts.txt does not exist.");
+        }
+        return bankAcounts;
+    }
+}
 
 

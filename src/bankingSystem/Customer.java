@@ -2,7 +2,7 @@ package bankingSystem;
 
 import java.util.HashMap;
 
-public class Customer extends Person{
+public class Customer extends Person {
 
     //Customers may have a checking account, a savings account, or both.
 //    <accountType , accountAmount>
@@ -10,7 +10,7 @@ public class Customer extends Person{
 
     public Customer(String firstName, String lastName, String role) {
         super(firstName, lastName);
-//        this.accounts = accounts;
+        //        this.accounts = accounts;
     }
 
 
