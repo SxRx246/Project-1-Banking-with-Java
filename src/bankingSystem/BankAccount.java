@@ -14,21 +14,28 @@ public class BankAccount {
         CHECKING,
         SAVINGS
     }
+    public enum AccountStatus {
+        DEACTIVATED,
+        ACTIVE
+    }
 
     private AccountType accountType;
     private int accountNumber;
     private double balance;
     Login loggedInUser;
     private String email;
-    private String password;
+    private AccountStatus accountStatus;
+    private int overdraftCount;
 
     Scanner scanner = new Scanner(System.in);
 
-    public BankAccount(String email, int accountNumber, double balance, AccountType accountType) {
+    public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount ) {
         this.email = email;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.accountType = accountType;
+        this.accountStatus = accountStatus;
+        this.overdraftCount = overdraftCount;
 
     }
 
@@ -46,6 +53,22 @@ public class BankAccount {
 
     public AccountType getAccountType() {
         return accountType;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public int getOverdraftCount() {
+        return overdraftCount;
+    }
+    public void setAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+
+    public void setOverdraftCount(int overdraftCount) {
+        this.overdraftCount = overdraftCount;
     }
 
     public void setBalance(double balance) {
@@ -75,16 +98,40 @@ public class BankAccount {
     }
 
     public static void withdrawMoney(double amount, BankAccount bankAccount) {
+        if (bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            System.out.println("Withdrawal failed. Your account is deactivated.");
+            return;
+        }
         double currentBalance = bankAccount.getBalance();
-        double balance;
+        double newBalance;
+        int overdraftCount = bankAccount.getOverdraftCount();
+
+        newBalance = currentBalance - amount;
 
         if (amount <= 0) {
-            System.out.println("please enter valid amount");
-        } else if (currentBalance < amount) {
-            System.out.println("You have only " + currentBalance + " in your account");
-        } else if (currentBalance >= amount) {
-            balance = currentBalance - amount;
-            bankAccount.setBalance(balance);
+            System.out.println("please enter valid amount (more than 0)");
+        }
+        else if (newBalance < -100) {
+            System.out.println("Withdrawal failed. You cannot overdraft more than 100BD.");
+        }
+        else {
+
+//            System.out.println("You have only " + currentBalance + " in your account, your account will be overdraft ");
+//        }
+//        else if (currentBalance >= amount) {
+
+
+            if(newBalance < 0){
+                overdraftCount++;
+                 newBalance -= 35;
+
+            }
+            if(overdraftCount == 2){
+                bankAccount.setAccountStatus(AccountStatus.DEACTIVATED);
+            }
+
+            bankAccount.setBalance(newBalance);
+            bankAccount.setOverdraftCount(overdraftCount);
 
             File file = new File("bankAccounts.txt");
 
@@ -99,6 +146,8 @@ public class BankAccount {
                         String[] fields = line.split(",");
                         if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
                             fields[2] = String.valueOf(bankAccount.getBalance());
+                            fields[4] = String.valueOf(bankAccount.getAccountStatus());
+                            fields[5] = String.valueOf(bankAccount.getOverdraftCount());
                             line = String.join(",", fields);
                         }
                         lines.add(line);
@@ -125,10 +174,14 @@ public class BankAccount {
 
     public static void depositMoney(double amount, BankAccount bankAccount) {
         double currentBalance = bankAccount.getBalance();
-        double balance;
+        double newBalance;
 
-        balance = currentBalance + amount;
-        bankAccount.setBalance(balance);
+        newBalance = currentBalance + amount;
+        bankAccount.setBalance(newBalance);
+
+        if(newBalance>=0 && bankAccount.getAccountStatus()== AccountStatus.DEACTIVATED){
+            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
+        }
 
         File file = new File("bankAccounts.txt");
 
@@ -143,6 +196,7 @@ public class BankAccount {
                     String[] fields = line.split(",");
                     if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
                         fields[2] = String.valueOf(bankAccount.getBalance());
+                        fields[4] = String.valueOf(bankAccount.getAccountStatus());
                         line = String.join(",", fields);
                     }
                     lines.add(line);
@@ -277,11 +331,15 @@ public class BankAccount {
                 return;
             }
 
+            AccountStatus accountStatus = AccountStatus.ACTIVE;
+
             System.out.println("Enter the initial deposit amount: ");
             double balance = scanner.nextDouble();
             scanner.nextLine();
 
-            BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType);
+            int overdraft =0;
+
+            BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft);
 
             addingAccountTofile(bankAccount);
         }
@@ -325,15 +383,17 @@ public class BankAccount {
                         String existingEmail = line.split(",")[1];
                         double balance = Double.parseDouble(line.split(",")[2]);
                         AccountType accountType = AccountType.valueOf(line.split(",")[3]);
+                        AccountStatus accountStatus = AccountStatus.valueOf(line.split(",")[4]);
+                        int overdraftCount = Integer.parseInt(line.split(",")[5]);
                         if (numberOfAccounts == 1) {
                             if (existingEmail.equalsIgnoreCase(email)) {
-                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType);
+                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType, accountStatus, overdraftCount);
 
                                 break;
                             }
                         } else if (numberOfAccounts > 1) {
                             if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accountNumber) {
-                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType);
+                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType, accountStatus, overdraftCount);
 
                                 break;
                             }
