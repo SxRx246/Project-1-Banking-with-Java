@@ -1,2 +1,2 @@
-627440,Sara@gmail.com,120.0,CHECKING
-448094,sara@gmail.com,400.0,SAVINGS
+627440,Sara@gmail.com,350.0,CHECKING
+448094,sara@gmail.com,270.0,SAVINGS

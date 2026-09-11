@@ -167,7 +167,7 @@ public class BankAccount {
             }
         }
 
-    public static void TransferMoney(double amount, BankAccount myBankAccount, BankAccount toBankAccount){
+    public static void transferMoney(BankAccount myBankAccount, int accountNumber, double amount){
         double myCurrentBalance = myBankAccount.getBalance();
         double myBalance;
 
@@ -180,7 +180,7 @@ public class BankAccount {
         else if(myCurrentBalance>= amount) {
             myBalance = myCurrentBalance - amount;
             myBankAccount.setBalance(myBalance);
-            toBankAccount.setBalance(toBankAccount.getBalance()+amount);
+//            toBankAccount.setBalance(toBankAccount.getBalance()+amount);
 
             File file = new File("bankAccounts.txt");
 
@@ -197,8 +197,10 @@ public class BankAccount {
                             fields[2] = String.valueOf(myBankAccount.getBalance());
                             line = String.join(",", fields);
                         }
-                        else if(fields[0].equals(String.valueOf(toBankAccount.getAccountNumber()))) {
-                            fields[2] = String.valueOf(toBankAccount.getBalance());
+                        else if(fields[0].equals(String.valueOf(accountNumber))) {
+                            double ToAccountBalance = Double.parseDouble(fields[2]);
+                                   ToAccountBalance += amount;
+                            fields[2] = String.valueOf(ToAccountBalance);
                             line = String.join(",", fields);
                         }
                         lines.add(line);
@@ -366,7 +368,8 @@ public class BankAccount {
             }
             int accontNumber = 0;
              if(numberOfAccounts > 1) {
-                System.out.println("Enter your bank account number that you want to do transactions with: ");
+                 System.out.println("You have multiple bank accounts.");
+                 System.out.print("Please enter the account number you want to use for the transaction: ");
                 accontNumber = scanner.nextInt();
                 scanner.nextLine();
             }
@@ -428,7 +431,13 @@ public class BankAccount {
                     depositMoney(amount, currentBankAccount);
                 }
                 else if(transaction == 't' || transaction == 'T'){
-
+                    System.out.print("how much money you want to transfer?");
+                    amount = scanner.nextDouble();
+                    scanner.nextLine();
+                    System.out.println("Enter the account number you want to transfer to: ");
+                    int toAccountNumber = scanner.nextInt();
+                    scanner.nextLine();
+                    transferMoney(currentBankAccount, toAccountNumber, amount);
                 }
                 else {
                     System.out.println("Please enter valid type of transaction(w or d or t), w for Withdraw Money, d for Deposit Money, t for Transfer Money");
