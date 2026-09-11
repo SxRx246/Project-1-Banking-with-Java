@@ -185,7 +185,6 @@ public class BankAccount {
         } else if (myCurrentBalance >= amount) {
             myBalance = myCurrentBalance - amount;
             myBankAccount.setBalance(myBalance);
-//            toBankAccount.setBalance(toBankAccount.getBalance()+amount);
 
             File file = new File("bankAccounts.txt");
 
@@ -194,33 +193,48 @@ public class BankAccount {
                     Scanner fileScanner = new Scanner(file);
                     ArrayList<String> lines = new ArrayList<>();
 
+                    boolean isAcountNumberExist = false;
                     while (fileScanner.hasNextLine()) {
                         String line = fileScanner.nextLine();
 
                         String[] fields = line.split(",");
-                        if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
-                            fields[2] = String.valueOf(myBankAccount.getBalance());
-                            line = String.join(",", fields);
-                        } else if (fields[0].equals(String.valueOf(accountNumber))) {
-                            double ToAccountBalance = Double.parseDouble(fields[2]);
-                            ToAccountBalance += amount;
-                            fields[2] = String.valueOf(ToAccountBalance);
-                            line = String.join(",", fields);
+                        if (fields[0].equals(String.valueOf(accountNumber))) {
+                            isAcountNumberExist = true;
                         }
-                        lines.add(line);
-                    }
-                    fileScanner.close();
-
-                    FileWriter writer = new FileWriter(file);
-
-                    for (String line : lines) {
-                        writer.write(line + "\n");
                     }
 
-                    writer.close();
+                    if (isAcountNumberExist) {
+                        while (fileScanner.hasNextLine()) {
+                            String line = fileScanner.nextLine();
 
-                    System.out.println("Successful Transfer of " + amount + "BD");
-                    System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
+                            String[] fields = line.split(",");
+                            if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
+                                fields[2] = String.valueOf(myBankAccount.getBalance());
+                                line = String.join(",", fields);
+                            } else if (fields[0].equals(String.valueOf(accountNumber))) {
+                                double ToAccountBalance = Double.parseDouble(fields[2]);
+                                ToAccountBalance += amount;
+                                fields[2] = String.valueOf(ToAccountBalance);
+                                line = String.join(",", fields);
+                            }
+                            lines.add(line);
+                        }
+                        fileScanner.close();
+
+                        FileWriter writer = new FileWriter(file);
+
+                        for (String line : lines) {
+                            writer.write(line + "\n");
+                        }
+
+                        writer.close();
+
+                        System.out.println("Successful Transfer of " + amount + "BD");
+                        System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
+                    }
+                    else {
+                        System.out.println("Transfer failed. The account number you entered does not exist.");
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
