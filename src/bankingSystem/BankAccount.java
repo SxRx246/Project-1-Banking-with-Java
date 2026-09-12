@@ -14,6 +14,7 @@ public class BankAccount {
         CHECKING,
         SAVINGS
     }
+
     public enum AccountStatus {
         DEACTIVATED,
         ACTIVE
@@ -29,13 +30,14 @@ public class BankAccount {
 
     Scanner scanner = new Scanner(System.in);
 
-    public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount ) {
+    public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount) {
         this.email = email;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.accountType = accountType;
         this.accountStatus = accountStatus;
         this.overdraftCount = overdraftCount;
+
 
     }
 
@@ -62,6 +64,7 @@ public class BankAccount {
     public int getOverdraftCount() {
         return overdraftCount;
     }
+
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
     }
@@ -76,16 +79,15 @@ public class BankAccount {
     }
 
     public static void addingAccountTofile(BankAccount bankAccount) {
-        File file2 = new File("bankAccounts.txt");
         try {
-            Scanner fileScanner = new Scanner(file2);
-
             FileWriter writer = new FileWriter("bankAccounts.txt", true);
             writer.write(
                     bankAccount.getAccountNumber() + "," +
                             bankAccount.getUserEmail() + "," +
                             bankAccount.getBalance() + "," +
-                            bankAccount.getAccountType()
+                            bankAccount.getAccountType() + "," +
+                            bankAccount.getAccountStatus() + "," +
+                            bankAccount.getOverdraftCount()
             );
 
             writer.write("\n");
@@ -110,23 +112,26 @@ public class BankAccount {
 
         if (amount <= 0) {
             System.out.println("please enter valid amount (more than 0)");
-        }
-        else if (newBalance < -100) {
-            System.out.println("Withdrawal failed. You cannot overdraft more than 100BD.");
-        }
-        else {
+        } else if (currentBalance < 0 && amount > 100) {
+            System.out.println(
+                    "Withdrawal failed. Your account balance is already negative ("
+                            + currentBalance + "BD), and you cannot withdraw more than 100 BD while your account is overdrawn."
+            );
+        } else {
 
 //            System.out.println("You have only " + currentBalance + " in your account, your account will be overdraft ");
 //        }
 //        else if (currentBalance >= amount) {
 
 
-            if(newBalance < 0){
+            if (newBalance < 0) {
                 overdraftCount++;
-                 newBalance -= 35;
-
+                newBalance -= 35;
+                System.out.println("Overdraft occurred." +
+                        "\n Overdraft protection fee: 35 BD" +
+                        "\n New balance: " + newBalance + " BD");
             }
-            if(overdraftCount == 2){
+            if (overdraftCount >= 2) {
                 bankAccount.setAccountStatus(AccountStatus.DEACTIVATED);
             }
 
@@ -162,8 +167,8 @@ public class BankAccount {
 
                     writer.close();
 
-                    System.out.println("Successful Withdraw of " + amount + "BD");
-                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
+                    System.out.println("Successful Withdraw of " + amount + " BD");
+//                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -173,14 +178,20 @@ public class BankAccount {
     }
 
     public static void depositMoney(double amount, BankAccount bankAccount) {
+        if (amount <= 0) {
+            System.out.println("Please enter a valid deposit amount.");
+            return;
+        }
+
         double currentBalance = bankAccount.getBalance();
         double newBalance;
 
         newBalance = currentBalance + amount;
         bankAccount.setBalance(newBalance);
 
-        if(newBalance>=0 && bankAccount.getAccountStatus()== AccountStatus.DEACTIVATED){
+        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
             bankAccount.setAccountStatus(AccountStatus.ACTIVE);
+            bankAccount.setOverdraftCount(0);
         }
 
         File file = new File("bankAccounts.txt");
@@ -197,6 +208,7 @@ public class BankAccount {
                     if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
                         fields[2] = String.valueOf(bankAccount.getBalance());
                         fields[4] = String.valueOf(bankAccount.getAccountStatus());
+                        fields[5] = String.valueOf(bankAccount.getOverdraftCount());
                         line = String.join(",", fields);
                     }
                     lines.add(line);
@@ -211,7 +223,7 @@ public class BankAccount {
 
                 writer.close();
 
-                System.out.println("Successful Deposit of " + amount + "BD");
+                System.out.println("Successful Deposit of " + amount + " BD");
                 System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -220,6 +232,10 @@ public class BankAccount {
     }
 
     public static void transferMoney(BankAccount myBankAccount, int accountNumber, double amount) {
+        if (myBankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            System.out.println("Transfer failed. Your account is deactivated.");
+            return;
+        }
 
         if (myBankAccount.getAccountNumber() == accountNumber) {
             System.out.println("you can't transfer to the same account");
@@ -283,10 +299,9 @@ public class BankAccount {
 
                         writer.close();
 
-                        System.out.println("Successful Transfer of " + amount + "BD");
+                        System.out.println("Successful Transfer of " + amount + " BD");
                         System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
-                    }
-                    else {
+                    } else {
                         System.out.println("Transfer failed. The account number you entered does not exist.");
                     }
                 } catch (IOException e) {
@@ -334,10 +349,23 @@ public class BankAccount {
             AccountStatus accountStatus = AccountStatus.ACTIVE;
 
             System.out.println("Enter the initial deposit amount: ");
-            double balance = scanner.nextDouble();
-            scanner.nextLine();
+//            double balance = scanner.nextDouble();
+//            scanner.nextLine();
+            String input = scanner.nextLine();
 
-            int overdraft =0;
+            if (!input.matches("\\d+(\\.\\d+)?")) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                return;
+            }
+
+            double balance = Double.parseDouble(input);
+
+            if (balance <= 0) {
+                System.out.println("Initial deposit must be greater than 0.");
+                return;
+            }
+
+            int overdraft = 0;
 
             BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft);
 
@@ -361,6 +389,7 @@ public class BankAccount {
         while (startTransaction) {
             BankAccount currentBankAccount = null;
             int accountNumber;
+            String input;
 
             File file = new File("bankAccounts.txt");
 
@@ -369,8 +398,14 @@ public class BankAccount {
                 if (numberOfAccounts > 1) {
                     System.out.println("You have multiple bank accounts.");
                     System.out.print("Please enter the account number you want to use for the transaction: ");
-                    accountNumber = scanner.nextInt();
-                    scanner.nextLine();
+                    input = scanner.nextLine();
+
+                    if (!input.matches("\\d+")) {
+                        System.out.println("Invalid account number. Please enter numbers only.");
+                        continue;
+                    }
+
+                    accountNumber = Integer.parseInt(input);
                 } else {
                     accountNumber = 0;
                 }
@@ -414,23 +449,49 @@ public class BankAccount {
                 scanner.nextLine();
 
                 double amount = 0;
+                String inputAmount;
                 if (transaction == 'w' || transaction == 'W') {
                     System.out.print("how much money you want to withdraw?");
-                    amount = scanner.nextDouble();
-                    scanner.nextLine();
+//                    amount = scanner.nextDouble();
+//                    scanner.nextLine();
+                    inputAmount = scanner.nextLine();
+                    if (!inputAmount.matches("\\d+(\\.\\d+)?")) {
+                        System.out.println("Invalid amount. Please enter a valid number.");
+                        continue;
+                    }
+                    amount = Double.parseDouble(inputAmount);
                     withdrawMoney(amount, currentBankAccount);
                 } else if (transaction == 'd' || transaction == 'D') {
                     System.out.print("how much money you want to deposit?");
-                    amount = scanner.nextDouble();
-                    scanner.nextLine();
+//                    amount = scanner.nextDouble();
+//                    scanner.nextLine();
+                    inputAmount = scanner.nextLine();
+                    if (!inputAmount.matches("\\d+(\\.\\d+)?")) {
+                        System.out.println("Invalid amount. Please enter a valid number.");
+                        continue;
+                    }
+                    amount = Double.parseDouble(inputAmount);
                     depositMoney(amount, currentBankAccount);
                 } else if (transaction == 't' || transaction == 'T') {
                     System.out.print("how much money you want to transfer?");
-                    amount = scanner.nextDouble();
-                    scanner.nextLine();
+//                    amount = scanner.nextDouble();
+//                    scanner.nextLine();
+                    inputAmount = scanner.nextLine();
+                    if (!inputAmount.matches("\\d+(\\.\\d+)?")) {
+                        System.out.println("Invalid amount. Please enter a valid number.");
+                        continue;
+                    }
+                    amount = Double.parseDouble(inputAmount);
                     System.out.println("Enter the account number you want to transfer to: ");
-                    int toAccountNumber = scanner.nextInt();
-                    scanner.nextLine();
+//                    int toAccountNumber = scanner.nextInt();
+//                    scanner.nextLine();
+                    String inputToAccountNumber = scanner.nextLine();
+                    if (!inputToAccountNumber.matches("\\d+")) {
+                        System.out.println("Invalid account number. Please enter numbers only.");
+                        continue;
+                    }
+
+                    int toAccountNumber = Integer.parseInt(inputToAccountNumber);
                     transferMoney(currentBankAccount, toAccountNumber, amount);
                 } else {
                     System.out.println("Please enter valid type of transaction(w or d or t), w for Withdraw Money, d for Deposit Money, t for Transfer Money");
