@@ -174,7 +174,7 @@ public class BankAccount {
                     writer.close();
 
                     System.out.println("Successful Withdraw of " + amount + " BD");
-//                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
+                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -342,6 +342,59 @@ public class BankAccount {
         }
     }
 
+
+    public static void transactionHistory(String email){
+        File file = new File("transactions.txt");
+        int count = 0;
+        try{
+            if(file.exists()) {
+                Scanner fileScanner = new Scanner(file);
+                System.out.printf(
+                        "%-5s %-12s %-10s %-16s %-12s %12s %20s%n",
+                        "#",
+                        "Date",
+                        "Time",
+                        "Account Number",
+                        "Type",
+                        "Amount",
+                        "Balance"
+                );
+                for(int i=0; i<=10; i++ ){
+                    System.out.print("---------");
+                }
+                System.out.println();
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+                    String date = line.split(",")[0];
+                    String time = line.split(",")[1];
+                    String existingEmail = line.split(",")[2];
+                    String accountNumber = line.split(",")[3];
+                    String type = line.split(",")[4];
+                    double amount = Double.parseDouble(line.split(",")[5]);
+                    double balance = Double.parseDouble(line.split(",")[6]);
+
+                    if(existingEmail.equalsIgnoreCase(email)){
+                        count++;
+
+                        System.out.printf(
+                                "%-5d %-12s %-10s %-16s %-12s %12.2f %20.2f%n",
+                                count,
+                                date,
+                                time,
+                                accountNumber,
+                                type,
+                                amount,
+                                balance
+                        );
+                    }
+                }
+            }
+        }
+        catch(Exception e){
+            System.out.println("Error");
+        }
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -364,6 +417,7 @@ public class BankAccount {
 
             System.out.println("Account Type Checking or Saving?(Enter C or S)");
             char checkAccountType = scanner.next().charAt(0);
+            scanner.nextLine();
 
             AccountType accountType;
             if (checkAccountType == 'c' || checkAccountType == 'C') {
@@ -539,20 +593,32 @@ public class BankAccount {
                     return;
                 }
 
-//                System.out.println("Do you want to have another transaction in this account? (yes or no");
-//                String check2 = scanner.nextLine();
-//
-//                if (check2.equalsIgnoreCase("No")) {
-//                    startTransaction = false;
-//                } else if (check2.equalsIgnoreCase("yes")) {
-//                    continue;
-//                } else {
-//                    System.out.println("please enter (yes or no)");
-//                    return;
-//                }
+                System.out.println("Do you want to have another transaction? (yes or no)");
+                String check2 = scanner.nextLine();
+//                scanner.nextLine();
+
+                if (check2.equalsIgnoreCase("No")) {
+                    startTransaction = false;
+                } else if (check2.equalsIgnoreCase("yes")) {
+                    continue;
+                } else {
+                    System.out.println("please enter (yes or no)");
+                    return;
+                }
 
             }
 
+        }
+        System.out.println("Do you want to view transactions History?");
+        String input = scanner.nextLine();
+//        scanner.nextLine();
+
+        if(input.equalsIgnoreCase("yes")){
+            transactionHistory(loggedInUser.getEmail());
+        }
+        else if(!input.equalsIgnoreCase("No")){
+            System.out.println("please enter yes or no");
+            return;
         }
 
     }
