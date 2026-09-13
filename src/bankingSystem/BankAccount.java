@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -99,10 +103,10 @@ public class BankAccount {
         }
     }
 
-    public static void withdrawMoney(double amount, BankAccount bankAccount) {
+    public static boolean withdrawMoney(double amount, BankAccount bankAccount) {
         if (bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
             System.out.println("Withdrawal failed. Your account is deactivated.");
-            return;
+            return false;
         }
         double currentBalance = bankAccount.getBalance();
         double newBalance;
@@ -112,11 +116,13 @@ public class BankAccount {
 
         if (amount <= 0) {
             System.out.println("please enter valid amount (more than 0)");
+            return false;
         } else if (currentBalance < 0 && amount > 100) {
             System.out.println(
                     "Withdrawal failed. Your account balance is already negative ("
                             + currentBalance + "BD), and you cannot withdraw more than 100 BD while your account is overdrawn."
             );
+            return false;
         } else {
 
 //            System.out.println("You have only " + currentBalance + " in your account, your account will be overdraft ");
@@ -173,14 +179,14 @@ public class BankAccount {
                     e.printStackTrace();
                 }
             }
+        return true;
         }
-
     }
 
-    public static void depositMoney(double amount, BankAccount bankAccount) {
+    public static boolean depositMoney(double amount, BankAccount bankAccount) {
         if (amount <= 0) {
             System.out.println("Please enter a valid deposit amount.");
-            return;
+            return false;
         }
 
         double currentBalance = bankAccount.getBalance();
@@ -192,6 +198,7 @@ public class BankAccount {
         if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
             bankAccount.setAccountStatus(AccountStatus.ACTIVE);
             bankAccount.setOverdraftCount(0);
+            System.out.println("Account has been reactivated");
         }
 
         File file = new File("bankAccounts.txt");
@@ -229,17 +236,18 @@ public class BankAccount {
                 e.printStackTrace();
             }
         }
+        return true;
     }
 
-    public static void transferMoney(BankAccount myBankAccount, int accountNumber, double amount) {
+    public static boolean transferMoney(BankAccount myBankAccount, int accountNumber, double amount) {
         if (myBankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
             System.out.println("Transfer failed. Your account is deactivated.");
-            return;
+            return false;
         }
 
         if (myBankAccount.getAccountNumber() == accountNumber) {
             System.out.println("you can't transfer to the same account");
-            return;
+            return false;
         }
 
         double myCurrentBalance = myBankAccount.getBalance();
@@ -247,11 +255,11 @@ public class BankAccount {
 
         if (amount <= 0) {
             System.out.println("please enter valid amount");
-            return;
+            return false;
         } else if (myCurrentBalance < amount) {
             System.out.println("Transfer failed. You don't have enough balance.");
             System.out.println("You have only " + myCurrentBalance + " in your account");
-            return;
+            return false;
         } else if (myCurrentBalance >= amount) {
             myBalance = myCurrentBalance - amount;
             myBankAccount.setBalance(myBalance);
@@ -309,9 +317,30 @@ public class BankAccount {
                 }
             }
         }
-
+        return true;
     }
 
+    public void addTransactionToFile(String type, double amount) {
+        try {
+            File file = new File("transactions.txt");
+            FileWriter writer = new FileWriter(file, true);
+            LocalDate date = LocalDate.now();
+            LocalTime time = LocalTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+            writer.write(date + "," +
+                    time.format(formatter) + "," +
+                    this.getUserEmail() + "," +
+                    this.getAccountNumber() + "," +
+                    type + "," +
+                    amount + "," +
+                    this.getBalance() + "," +
+                    "\n");
+
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("Error writing transaction: " + e.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -460,7 +489,11 @@ public class BankAccount {
                         continue;
                     }
                     amount = Double.parseDouble(inputAmount);
-                    withdrawMoney(amount, currentBankAccount);
+
+                    boolean successful = withdrawMoney(amount, currentBankAccount);
+                    if (successful) {
+                        currentBankAccount.addTransactionToFile("WITHDRAW", amount);
+                    }
                 } else if (transaction == 'd' || transaction == 'D') {
                     System.out.print("how much money you want to deposit?");
 //                    amount = scanner.nextDouble();
@@ -471,7 +504,11 @@ public class BankAccount {
                         continue;
                     }
                     amount = Double.parseDouble(inputAmount);
-                    depositMoney(amount, currentBankAccount);
+
+                    boolean successful = depositMoney(amount, currentBankAccount);
+                    if (successful) {
+                        currentBankAccount.addTransactionToFile("DEPOSIT", amount);
+                    }
                 } else if (transaction == 't' || transaction == 'T') {
                     System.out.print("how much money you want to transfer?");
 //                    amount = scanner.nextDouble();
@@ -492,23 +529,27 @@ public class BankAccount {
                     }
 
                     int toAccountNumber = Integer.parseInt(inputToAccountNumber);
-                    transferMoney(currentBankAccount, toAccountNumber, amount);
+
+                    boolean successful = transferMoney(currentBankAccount, toAccountNumber, amount);
+                    if (successful) {
+                        currentBankAccount.addTransactionToFile("TRANSFER", amount);
+                    }
                 } else {
                     System.out.println("Please enter valid type of transaction(w or d or t), w for Withdraw Money, d for Deposit Money, t for Transfer Money");
                     return;
                 }
 
-                System.out.println("Do you want to have another transaction in this account? (yes or no");
-                String check2 = scanner.nextLine();
-
-                if (check2.equalsIgnoreCase("No")) {
-                    startTransaction = false;
-                } else if (check2.equalsIgnoreCase("yes")) {
-                    continue;
-                } else {
-                    System.out.println("please enter (yes or no)");
-                    return;
-                }
+//                System.out.println("Do you want to have another transaction in this account? (yes or no");
+//                String check2 = scanner.nextLine();
+//
+//                if (check2.equalsIgnoreCase("No")) {
+//                    startTransaction = false;
+//                } else if (check2.equalsIgnoreCase("yes")) {
+//                    continue;
+//                } else {
+//                    System.out.println("please enter (yes or no)");
+//                    return;
+//                }
 
             }
 

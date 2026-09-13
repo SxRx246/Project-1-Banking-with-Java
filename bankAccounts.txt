@@ -1,3 +1,3 @@
 627440,Sara@gmail.com,350.0,CHECKING,ACTIVE,0
 448094,sara@gmail.com,150.0,SAVINGS,ACTIVE,0
-855358,sara@gmail.com,-135.0,SAVINGS,ACTIVE,1
+855358,sara@gmail.com,-85.0,SAVINGS,ACTIVE,1
