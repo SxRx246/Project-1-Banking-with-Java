@@ -19,28 +19,39 @@ public class BankAccount {
         SAVINGS
     }
 
+    private AccountType accountType;
+
     public enum AccountStatus {
         DEACTIVATED,
         ACTIVE
     }
 
-    private AccountType accountType;
+    private AccountStatus accountStatus;
+
+    public enum DebitCardType {
+        MASTERCARD,
+        MASTERCARD_TITANIUM,
+        MASTERCARD_PLATINUM
+    }
+
+    private DebitCardType debitCardType;
+
     private int accountNumber;
     private double balance;
     Login loggedInUser;
     private String email;
-    private AccountStatus accountStatus;
     private int overdraftCount;
 
     Scanner scanner = new Scanner(System.in);
 
-    public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount) {
+    public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount, DebitCardType debitCardType) {
         this.email = email;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.accountType = accountType;
         this.accountStatus = accountStatus;
         this.overdraftCount = overdraftCount;
+        this.debitCardType = debitCardType;
 
 
     }
@@ -69,6 +80,14 @@ public class BankAccount {
         return overdraftCount;
     }
 
+    public DebitCardType getDebitCardType() {
+        return debitCardType;
+    }
+
+    public void setDebitCardType(DebitCardType debitCardType) {
+        this.debitCardType = debitCardType;
+    }
+
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
     }
@@ -91,7 +110,8 @@ public class BankAccount {
                             bankAccount.getBalance() + "," +
                             bankAccount.getAccountType() + "," +
                             bankAccount.getAccountStatus() + "," +
-                            bankAccount.getOverdraftCount()
+                            bankAccount.getOverdraftCount() + "," +
+                            bankAccount.getDebitCardType()
             );
 
             writer.write("\n");
@@ -179,7 +199,7 @@ public class BankAccount {
                     e.printStackTrace();
                 }
             }
-        return true;
+            return true;
         }
     }
 
@@ -261,8 +281,6 @@ public class BankAccount {
             System.out.println("You have only " + myCurrentBalance + " in your account");
             return false;
         } else if (myCurrentBalance >= amount) {
-            myBalance = myCurrentBalance - amount;
-            myBankAccount.setBalance(myBalance);
 
             File file = new File("bankAccounts.txt");
 
@@ -271,53 +289,63 @@ public class BankAccount {
                     Scanner fileScanner = new Scanner(file);
                     ArrayList<String> lines = new ArrayList<>();
 
-                    boolean isAcountNumberExist = false;
+                    boolean isAccountNumberExist = false;
                     while (fileScanner.hasNextLine()) {
                         String line = fileScanner.nextLine();
 
                         String[] fields = line.split(",");
                         if (fields[0].equals(String.valueOf(accountNumber))) {
-                            isAcountNumberExist = true;
+                            isAccountNumberExist = true;
                         }
                     }
+                    fileScanner.close();
 
-                    if (isAcountNumberExist) {
-                        while (fileScanner.hasNextLine()) {
-                            String line = fileScanner.nextLine();
-
-                            String[] fields = line.split(",");
-                            if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
-                                fields[2] = String.valueOf(myBankAccount.getBalance());
-                                line = String.join(",", fields);
-                            } else if (fields[0].equals(String.valueOf(accountNumber))) {
-                                double ToAccountBalance = Double.parseDouble(fields[2]);
-                                ToAccountBalance += amount;
-                                fields[2] = String.valueOf(ToAccountBalance);
-                                line = String.join(",", fields);
-                            }
-                            lines.add(line);
-                        }
-                        fileScanner.close();
-
-                        FileWriter writer = new FileWriter(file);
-
-                        for (String line : lines) {
-                            writer.write(line + "\n");
-                        }
-
-                        writer.close();
-
-                        System.out.println("Successful Transfer of " + amount + " BD");
-                        System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
-                    } else {
+                    if (!isAccountNumberExist) {
                         System.out.println("Transfer failed. The account number you entered does not exist.");
+                        return false;
                     }
+                    myBalance = myCurrentBalance - amount;
+                    myBankAccount.setBalance(myBalance);
+
+                    fileScanner = new Scanner(file);
+
+                    while (fileScanner.hasNextLine()) {
+                        String line = fileScanner.nextLine();
+
+                        String[] fields = line.split(",");
+                        if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
+                            fields[2] = String.valueOf(myBankAccount.getBalance());
+                            line = String.join(",", fields);
+                        } else if (fields[0].equals(String.valueOf(accountNumber))) {
+                            double ToAccountBalance = Double.parseDouble(fields[2]);
+                            ToAccountBalance += amount;
+                            fields[2] = String.valueOf(ToAccountBalance);
+                            line = String.join(",", fields);
+                        }
+                        lines.add(line);
+                    }
+                    fileScanner.close();
+
+                    FileWriter writer = new FileWriter(file);
+
+                    for (String line : lines) {
+                        writer.write(line + "\n");
+                    }
+
+                    writer.close();
+
+                    System.out.println("Successful Transfer of " + amount + " BD");
+                    System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
+                    return true;
+//                    } else {
+//                        System.out.println("Transfer failed. The account number you entered does not exist.");
+//                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-        return true;
+        return false;
     }
 
     public void addTransactionToFile(String type, double amount) {
@@ -331,6 +359,7 @@ public class BankAccount {
                     time.format(formatter) + "," +
                     this.getUserEmail() + "," +
                     this.getAccountNumber() + "," +
+                    this.getAccountType() + "," +
                     type + "," +
                     amount + "," +
                     this.getBalance() + "," +
@@ -343,24 +372,25 @@ public class BankAccount {
     }
 
 
-    public static void transactionHistory(String email){
+    public static void transactionsHistory(String email) {
         File file = new File("transactions.txt");
         int count = 0;
-        try{
-            if(file.exists()) {
+        try {
+            if (file.exists()) {
                 Scanner fileScanner = new Scanner(file);
                 System.out.printf(
-                        "%-5s %-12s %-10s %-16s %-12s %12s %20s%n",
+                        "%-5s %-12s %-10s %-16s %-16s %-12s %12s %20s%n",
                         "#",
                         "Date",
                         "Time",
                         "Account Number",
-                        "Type",
+                        "Account Type",
+                        "Transaction Type",
                         "Amount",
                         "Balance"
                 );
-                for(int i=0; i<=10; i++ ){
-                    System.out.print("---------");
+                for (int i = 0; i <= 10; i++) {
+                    System.out.print("-----------");
                 }
                 System.out.println();
                 while (fileScanner.hasNextLine()) {
@@ -369,19 +399,21 @@ public class BankAccount {
                     String time = line.split(",")[1];
                     String existingEmail = line.split(",")[2];
                     String accountNumber = line.split(",")[3];
-                    String type = line.split(",")[4];
-                    double amount = Double.parseDouble(line.split(",")[5]);
-                    double balance = Double.parseDouble(line.split(",")[6]);
+                    String accountType = line.split(",")[4];
+                    String type = line.split(",")[5];
+                    double amount = Double.parseDouble(line.split(",")[6]);
+                    double balance = Double.parseDouble(line.split(",")[7]);
 
-                    if(existingEmail.equalsIgnoreCase(email)){
+                    if (existingEmail.equalsIgnoreCase(email)) {
                         count++;
 
                         System.out.printf(
-                                "%-5d %-12s %-10s %-16s %-12s %12.2f %20.2f%n",
+                                "%-5s %-12s %-10s %-16s %-16s %-12s %12s %20s%n",
                                 count,
                                 date,
                                 time,
                                 accountNumber,
+                                accountType,
                                 type,
                                 amount,
                                 balance
@@ -389,9 +421,8 @@ public class BankAccount {
                     }
                 }
             }
-        }
-        catch(Exception e){
-            System.out.println("Error");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -449,8 +480,30 @@ public class BankAccount {
             }
 
             int overdraft = 0;
+            System.out.println("Choose one type, Enter a number 1, 2 or 3: " +
+                    "\n 1. Mastercard Platinum" +
+                    "\n 2. Mastercard Titanium" +
+                    "\n 3. Mastercard");
+            String inputDebitCardType = scanner.nextLine();
+            int debitCardTypeChoosed = Integer.parseInt(inputDebitCardType);
+            if (!inputDebitCardType.matches("\\d+")) {
+                System.out.println("Invalid input. Please enter numbers only.");
+                return;
+            }
 
-            BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft);
+            DebitCardType debitCardType = null;
+            if (debitCardTypeChoosed == 1) {
+                debitCardType = debitCardType.MASTERCARD_PLATINUM;
+            } else if (debitCardTypeChoosed == 2) {
+                debitCardType = debitCardType.MASTERCARD_TITANIUM;
+            } else if (debitCardTypeChoosed == 3) {
+                debitCardType = debitCardType.MASTERCARD;
+            } else {
+                System.out.println("please enter a valid input whether 1 or 2 or 3:");
+                return;
+            }
+
+            BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
 
             addingAccountTofile(bankAccount);
         }
@@ -503,15 +556,16 @@ public class BankAccount {
                         AccountType accountType = AccountType.valueOf(line.split(",")[3]);
                         AccountStatus accountStatus = AccountStatus.valueOf(line.split(",")[4]);
                         int overdraftCount = Integer.parseInt(line.split(",")[5]);
+                        DebitCardType debitCardType = DebitCardType.valueOf(line.split(",")[6]);
                         if (numberOfAccounts == 1) {
                             if (existingEmail.equalsIgnoreCase(email)) {
-                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType, accountStatus, overdraftCount);
+                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
 
                                 break;
                             }
                         } else if (numberOfAccounts > 1) {
                             if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accountNumber) {
-                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType, accountStatus, overdraftCount);
+                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
 
                                 break;
                             }
@@ -593,19 +647,23 @@ public class BankAccount {
                     return;
                 }
 
-                System.out.println("Do you want to have another transaction? (yes or no)");
-                String check2 = scanner.nextLine();
+                while (true) {
+                    System.out.println("Do you want to have another transaction? (yes or no)");
+                    String check2 = scanner.nextLine();
 //                scanner.nextLine();
 
-                if (check2.equalsIgnoreCase("No")) {
-                    startTransaction = false;
-                } else if (check2.equalsIgnoreCase("yes")) {
-                    continue;
-                } else {
-                    System.out.println("please enter (yes or no)");
-                    return;
+                    if (check2.equalsIgnoreCase("No")) {
+                        startTransaction = false;
+                        break;
+                    } else if (check2.equalsIgnoreCase("yes")) {
+                        break;
+                    } else {
+                        System.out.println("please enter (yes or no)");
+                    }
                 }
-
+                if (!startTransaction) {
+                    break;
+                }
             }
 
         }
@@ -613,10 +671,9 @@ public class BankAccount {
         String input = scanner.nextLine();
 //        scanner.nextLine();
 
-        if(input.equalsIgnoreCase("yes")){
-            transactionHistory(loggedInUser.getEmail());
-        }
-        else if(!input.equalsIgnoreCase("No")){
+        if (input.equalsIgnoreCase("yes")) {
+            transactionsHistory(loggedInUser.getEmail());
+        } else if (!input.equalsIgnoreCase("No")) {
             System.out.println("please enter yes or no");
             return;
         }
