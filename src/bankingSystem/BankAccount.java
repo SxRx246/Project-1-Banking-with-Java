@@ -203,23 +203,70 @@ public class BankAccount {
         }
     }
 
-    public static boolean depositMoney(double amount, BankAccount bankAccount) {
+//    public static boolean depositMoney(double amount, BankAccount bankAccount) {
+//        if (amount <= 0) {
+//            System.out.println("Please enter a valid deposit amount.");
+//            return false;
+//        }
+//
+//        double currentBalance = bankAccount.getBalance();
+//        double newBalance;
+//
+//        newBalance = currentBalance + amount;
+//        bankAccount.setBalance(newBalance);
+//
+//        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+//            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
+//            bankAccount.setOverdraftCount(0);
+//            System.out.println("Account has been reactivated");
+//        }
+//
+//        File file = new File("bankAccounts.txt");
+//
+//        if (file.exists()) {
+//            try {
+//                Scanner fileScanner = new Scanner(file);
+//                ArrayList<String> lines = new ArrayList<>();
+//
+//                while (fileScanner.hasNextLine()) {
+//                    String line = fileScanner.nextLine();
+//
+//                    String[] fields = line.split(",");
+//                    if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
+//                        fields[2] = String.valueOf(bankAccount.getBalance());
+//                        fields[4] = String.valueOf(bankAccount.getAccountStatus());
+//                        fields[5] = String.valueOf(bankAccount.getOverdraftCount());
+//                        line = String.join(",", fields);
+//                    }
+//                    lines.add(line);
+//                }
+//                fileScanner.close();
+//
+//                FileWriter writer = new FileWriter(file);
+//
+//                for (String line : lines) {
+//                    writer.write(line + "\n");
+//                }
+//
+//                writer.close();
+//
+//                System.out.println("Successful Deposit of " + amount + " BD");
+//                System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return true;
+//    }
+
+    public static boolean depositMoney(double amount, int accountNumber) {
         if (amount <= 0) {
             System.out.println("Please enter a valid deposit amount.");
             return false;
         }
 
-        double currentBalance = bankAccount.getBalance();
-        double newBalance;
+        double newBalance = 0;
 
-        newBalance = currentBalance + amount;
-        bankAccount.setBalance(newBalance);
-
-        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
-            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
-            bankAccount.setOverdraftCount(0);
-            System.out.println("Account has been reactivated");
-        }
 
         File file = new File("bankAccounts.txt");
 
@@ -232,7 +279,26 @@ public class BankAccount {
                     String line = fileScanner.nextLine();
 
                     String[] fields = line.split(",");
-                    if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
+                    if (fields[0].equals(String.valueOf(accountNumber))) {
+                        String email = String.valueOf(fields[1]);
+                        double balance = Double.parseDouble(fields[2]);
+                        AccountType accountType = AccountType.valueOf(fields[3]);
+                        AccountStatus accountStatus = AccountStatus.valueOf(fields[4]);
+                        int overdraftCount = Integer.parseInt(fields[5]);
+                        DebitCardType debitCardType = DebitCardType.valueOf(fields[6]);
+                        BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
+
+                        double currentBalance = bankAccount.getBalance();
+
+                        newBalance = currentBalance + amount;
+                        bankAccount.setBalance(newBalance);
+
+                        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+                            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
+                            bankAccount.setOverdraftCount(0);
+                            System.out.println("Account has been reactivated");
+                        }
+
                         fields[2] = String.valueOf(bankAccount.getBalance());
                         fields[4] = String.valueOf(bankAccount.getAccountStatus());
                         fields[5] = String.valueOf(bankAccount.getOverdraftCount());
@@ -251,7 +317,7 @@ public class BankAccount {
                 writer.close();
 
                 System.out.println("Successful Deposit of " + amount + " BD");
-                System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
+                System.out.println("Balance now in account " + accountNumber + " is " + newBalance);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -395,14 +461,26 @@ public class BankAccount {
                 System.out.println();
                 while (fileScanner.hasNextLine()) {
                     String line = fileScanner.nextLine();
-                    String date = line.split(",")[0];
-                    String time = line.split(",")[1];
-                    String existingEmail = line.split(",")[2];
-                    String accountNumber = line.split(",")[3];
-                    String accountType = line.split(",")[4];
-                    String type = line.split(",")[5];
-                    double amount = Double.parseDouble(line.split(",")[6]);
-                    double balance = Double.parseDouble(line.split(",")[7]);
+
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",");
+
+                    if (fields.length < 8) {
+                        System.out.println("Skipping invalid transaction record: " + line);
+                        continue;
+                    }
+
+                    String date = fields[0];
+                    String time = fields[1];
+                    String existingEmail = fields[2];
+                    String accountNumber = fields[3];
+                    String accountType = fields[4];
+                    String type = fields[5];
+                    double amount = Double.parseDouble(fields[6]);
+                    double balance = Double.parseDouble(fields[7]);
 
                     if (existingEmail.equalsIgnoreCase(email)) {
                         count++;
@@ -426,6 +504,307 @@ public class BankAccount {
         }
     }
 
+    public static boolean reachedLimitPerDay(int accountNumber, BankAccount bankAccount, String transactionType, double currentTransactionAmount, int targetAccountNumber) {
+        File file1 = new File("bankAccounts.txt");
+        DebitCardType debitCardType = null;
+        boolean ownAccount = false;
+        boolean transferToOwnAccount = false;
+
+//        to check whether transaction been done to his own account or no, and to get the debitCardType
+        try {
+            if (file1.exists()) {
+                Scanner fileScanner = new Scanner(file1);
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    DebitCardType existingDebitCardType = DebitCardType.valueOf(line.split(",")[6]);
+                    int existingAccountNumber = Integer.valueOf(line.split(",")[0]);
+                    String existingEmail = String.valueOf(line.split(",")[1]);
+
+
+                    if (existingAccountNumber == accountNumber) {
+                        debitCardType = existingDebitCardType;
+                        if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
+                            ownAccount = true;
+                        }
+                    } else if (existingAccountNumber == targetAccountNumber) {
+                        if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
+                            transferToOwnAccount = true;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("error");
+        }
+
+        File file = new File("transactions.txt");
+        boolean limitReached = false;
+
+        double totalAmountWithdrawPerDay = 0;
+        double totalAmountTransferPerDay = 0;
+        double totalAmountOwnTransferPerDay = 0;
+        double totalAmountDepositPerDay = 0;
+        double totalAmountOwnDepositPerDay = 0;
+
+        try {
+            if (file.exists()) {
+                Scanner fileScanner = new Scanner(file);
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",");
+
+                    if (fields.length < 8) {
+                        System.out.println("Skipping invalid transaction record: " + line);
+                        continue;
+                    }
+
+                    String date = fields[0];
+                    int existingAccountNumber = Integer.parseInt(fields[3]);
+                    String existingTransactionType = fields[5];
+                    double amount = Double.parseDouble(fields[6]);
+
+
+//                    String date = line.split(",")[0];
+////                    String time = line.split(",")[1];
+////                    String existingEmail = line.split(",")[2];
+//                    int existingAccountNumber = Integer.valueOf(line.split(",")[3]);
+////                    String accountType = line.split(",")[4];
+//                    String existingTransactionType = line.split(",")[5];
+//                    double amount = Double.parseDouble(line.split(",")[6]);
+////                    double balance = Double.parseDouble(line.split(",")[7]);
+
+
+                    if (existingAccountNumber == accountNumber) {
+                        if (date.equals(String.valueOf(LocalDate.now()))) {
+                            if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
+                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+                                    totalAmountWithdrawPerDay += amount;
+                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+                                    if (ownAccount) {
+                                        totalAmountOwnDepositPerDay += amount;
+                                    } else {
+                                        totalAmountDepositPerDay += amount;
+                                    }
+                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+                                    if (transferToOwnAccount) {
+                                        totalAmountOwnTransferPerDay += amount;
+                                    } else {
+                                        totalAmountTransferPerDay += amount;
+                                    }
+                                }
+                            } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
+                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+                                    totalAmountWithdrawPerDay += amount;
+                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+                                    if (ownAccount) {
+                                        totalAmountOwnDepositPerDay += amount;
+                                    } else {
+                                        totalAmountDepositPerDay += amount;
+                                    }
+                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+                                    if (transferToOwnAccount) {
+                                        totalAmountOwnTransferPerDay += amount;
+                                    } else {
+                                        totalAmountTransferPerDay += amount;
+                                    }
+                                }
+                            } else if (debitCardType == DebitCardType.MASTERCARD) {
+                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+                                    totalAmountWithdrawPerDay += amount;
+                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+                                    if (ownAccount) {
+                                        totalAmountOwnDepositPerDay += amount;
+                                    } else {
+                                        totalAmountDepositPerDay += amount;
+                                    }
+                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+                                    if (transferToOwnAccount) {
+                                        totalAmountOwnTransferPerDay += amount;
+                                    } else {
+                                        totalAmountTransferPerDay += amount;
+                                    }
+                                }
+                            } else {
+                                System.out.println("Invalid Mastercard Type");
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
+            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+                if (totalAmountWithdrawPerDay + currentTransactionAmount > 20_000) {
+                    System.out.println("you can't withdraw more than 20,000 BD per day");
+//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+                if (ownAccount) {
+                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+                        System.out.println("you can't deposit more than 200,000 BD per day into your account");
+//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+                        System.out.println("you can't deposit more than 100,000 BD per day");
+//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+                if (transferToOwnAccount) {
+                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 80_000) {
+                        System.out.println("you can't transfer more than 80,000 BD per day from your account");
+//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountTransferPerDay + currentTransactionAmount > 40_000) {
+                        System.out.println("you can't transfer more than 40,000 BD per day into another persons account");
+//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            } else {
+                System.out.println("Invalid Transaction Type");
+            }
+        } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
+            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+                if (totalAmountWithdrawPerDay + currentTransactionAmount > 10_000) {
+                    System.out.println("you can't withdraw more than 10,000 BD per day");
+//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+                if (ownAccount) {
+                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+                        System.out.println("you can't deposit more than 100,000 BD per day");
+//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+                        System.out.println("you can't deposit more than 100,000 BD per day");
+//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+                if (transferToOwnAccount) {
+                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 40_000) {
+                        System.out.println("you can't transfer more than 40,000 BD per day");
+//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountTransferPerDay + currentTransactionAmount > 20_000) {
+                        System.out.println("you can't transfer more than 40,000 BD per day");
+//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            } else {
+                System.out.println("Invalid Transaction Type");
+            }
+        } else if (debitCardType == DebitCardType.MASTERCARD) {
+            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+                if (totalAmountWithdrawPerDay + currentTransactionAmount > 5_000) {
+                    System.out.println("you can't withdraw more than 5,000 BD per day");
+//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+                if (ownAccount) {
+                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+                        System.out.println("you can't deposit more than 100,000 BD per day");
+//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+                        System.out.println("you can't deposit more than 100,000 BD per day");
+//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+                if (transferToOwnAccount) {
+                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 20_000) {
+                        System.out.println("you can't transfer more than 40,000 BD per day");
+//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (totalAmountTransferPerDay + currentTransactionAmount > 10_000) {
+                        System.out.println("you can't transfer more than 40,000 BD per day");
+//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            System.out.println("Invalid Transaction Type");
+        }
+//                            if(date == String.valueOf(LocalDate.now())){
+//                                totalAmountPerDay +=amount;
+//                            }
+//                            if(totalAmountPerDay + currentTransactionAmount>20000){
+//                                System.out.println("you can't withdraw more than 20000 BD per day" +
+//                                        "\n you already withdraw "+ totalAmountPerDay +" BD today");
+//                            }
+//                        }
+//                        else if()
+
+
+        return true;
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -438,84 +817,113 @@ public class BankAccount {
 
         String email = loggedInUser.getEmail();
 
-        System.out.print("Do you want to add new bank account?(Enter yes or No)");
-        String addAccount = scanner.nextLine();
+        String addAccount;
+        while (true) {
+            System.out.print("Do you want to add new bank account?(Enter yes or No)");
+            addAccount = scanner.nextLine();
 
 
-        if (addAccount.equalsIgnoreCase("yes")) {
-            Random random = new Random();
-            int accountNumber = 100000 + random.nextInt(900000);
+            AccountType accountType = null;
+            int accountNumber = 0;
+            AccountStatus accountStatus = null;
+            double balance = 0;
+            int overdraft = 0;
+            DebitCardType debitCardType = null;
 
-            System.out.println("Account Type Checking or Saving?(Enter C or S)");
-            char checkAccountType = scanner.next().charAt(0);
-            scanner.nextLine();
+            if (addAccount.equalsIgnoreCase("yes")) {
+                Random random = new Random();
+                accountNumber = 100000 + random.nextInt(900000);
 
-            AccountType accountType;
-            if (checkAccountType == 'c' || checkAccountType == 'C') {
-                accountType = AccountType.CHECKING;
-            } else if (checkAccountType == 's' || checkAccountType == 'S') {
-                accountType = AccountType.SAVINGS;
-            } else {
-                System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
-                return;
-            }
+                while (true) {
+                    System.out.println("Account Type Checking or Saving?(Enter C or S)");
+                    char checkAccountType = scanner.next().charAt(0);
+                    scanner.nextLine();
 
-            AccountStatus accountStatus = AccountStatus.ACTIVE;
+                    if (checkAccountType == 'c' || checkAccountType == 'C') {
+                        accountType = AccountType.CHECKING;
+                        break;
+                    } else if (checkAccountType == 's' || checkAccountType == 'S') {
+                        accountType = AccountType.SAVINGS;
+                        break;
+                    } else {
+                        System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
+                        continue;
+                    }
+                }
 
-            System.out.println("Enter the initial deposit amount: ");
+                accountStatus = AccountStatus.ACTIVE;
+
+                while (true) {
+                    System.out.println("Enter the initial deposit amount: ");
 //            double balance = scanner.nextDouble();
 //            scanner.nextLine();
-            String input = scanner.nextLine();
+                    String input = scanner.nextLine();
 
-            if (!input.matches("\\d+(\\.\\d+)?")) {
-                System.out.println("Invalid amount. Please enter a valid number.");
-                return;
-            }
+                    if (!input.matches("\\d+(\\.\\d+)?")) {
+                        System.out.println("Invalid amount. Please enter a valid number.");
+                        continue;
+                    }
 
-            double balance = Double.parseDouble(input);
+                    balance = Double.parseDouble(input);
 
-            if (balance <= 0) {
-                System.out.println("Initial deposit must be greater than 0.");
-                return;
-            }
+                    if (balance <= 0) {
+                        System.out.println("Initial deposit must be greater than 0.");
+                        continue;
+                    }
+                    break;
+                }
 
-            int overdraft = 0;
-            System.out.println("Choose one type, Enter a number 1, 2 or 3: " +
-                    "\n 1. Mastercard Platinum" +
-                    "\n 2. Mastercard Titanium" +
-                    "\n 3. Mastercard");
-            String inputDebitCardType = scanner.nextLine();
-            int debitCardTypeChoosed = Integer.parseInt(inputDebitCardType);
-            if (!inputDebitCardType.matches("\\d+")) {
-                System.out.println("Invalid input. Please enter numbers only.");
-                return;
-            }
 
-            DebitCardType debitCardType = null;
-            if (debitCardTypeChoosed == 1) {
-                debitCardType = debitCardType.MASTERCARD_PLATINUM;
-            } else if (debitCardTypeChoosed == 2) {
-                debitCardType = debitCardType.MASTERCARD_TITANIUM;
-            } else if (debitCardTypeChoosed == 3) {
-                debitCardType = debitCardType.MASTERCARD;
+                while (true) {
+                    System.out.println("Choose one type, Enter a number 1, 2 or 3: " +
+                            "\n 1. Mastercard Platinum" +
+                            "\n 2. Mastercard Titanium" +
+                            "\n 3. Mastercard");
+                    String inputDebitCardType = scanner.nextLine();
+                    if (!inputDebitCardType.matches("\\d+")) {
+                        System.out.println("Invalid input. Please enter numbers only.");
+                        continue;
+                    }
+                    int debitCardTypeChoosed = Integer.parseInt(inputDebitCardType);
+
+                    if (debitCardTypeChoosed == 1) {
+                        debitCardType = DebitCardType.MASTERCARD_PLATINUM;
+                    } else if (debitCardTypeChoosed == 2) {
+                        debitCardType = DebitCardType.MASTERCARD_TITANIUM;
+                    } else if (debitCardTypeChoosed == 3) {
+                        debitCardType = DebitCardType.MASTERCARD;
+                    } else {
+                        System.out.println("please enter a valid input whether 1 or 2 or 3:");
+                        continue;
+                    }
+                    break;
+                }
+                BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
+
+                addingAccountTofile(bankAccount);
+                break;
+            } else if (addAccount.equalsIgnoreCase("no")) {
+                break;
             } else {
-                System.out.println("please enter a valid input whether 1 or 2 or 3:");
-                return;
+                System.out.println("please enter yes or no");
             }
-
-            BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
-
-            addingAccountTofile(bankAccount);
         }
 
         boolean startTransaction = false;
-        System.out.print("Do you want to start a transaction?(yes or no)");
-        String check = scanner.nextLine();
+        String check;
+        while (true) {
+            System.out.print("Do you want to start a transaction?(yes or no)");
+            check = scanner.nextLine();
 
-        if (check.equalsIgnoreCase("yes")) {
-            startTransaction = true;
-        } else if (!check.equalsIgnoreCase("No")) {
-            System.out.println("Please enter yes or no");
+            if (check.equalsIgnoreCase("yes")) {
+                startTransaction = true;
+                break;
+            } else if (check.equalsIgnoreCase("No")) {
+                break;
+            }
+            else {
+                System.out.println("Please enter yes or no");
+            }
         }
 
 
@@ -524,8 +932,9 @@ public class BankAccount {
 
         while (startTransaction) {
             BankAccount currentBankAccount = null;
-            int accountNumber;
+            int transactionAccountNumber;
             String input;
+            int accountNumber;
 
             File file = new File("bankAccounts.txt");
 
@@ -543,7 +952,7 @@ public class BankAccount {
 
                     accountNumber = Integer.parseInt(input);
                 } else {
-                    accountNumber = 0;
+                    accountNumber = currentBankAccount.getAccountNumber();
                 }
                 try {
                     Scanner fileScanner = new Scanner(file);
@@ -552,20 +961,20 @@ public class BankAccount {
 
                         int existingAccountNumber = Integer.parseInt(line.split(",")[0]);
                         String existingEmail = line.split(",")[1];
-                        double balance = Double.parseDouble(line.split(",")[2]);
-                        AccountType accountType = AccountType.valueOf(line.split(",")[3]);
-                        AccountStatus accountStatus = AccountStatus.valueOf(line.split(",")[4]);
+                        double existingBalance = Double.parseDouble(line.split(",")[2]);
+                        AccountType existingAccountType = AccountType.valueOf(line.split(",")[3]);
+                        AccountStatus existingAccountStatus = AccountStatus.valueOf(line.split(",")[4]);
                         int overdraftCount = Integer.parseInt(line.split(",")[5]);
-                        DebitCardType debitCardType = DebitCardType.valueOf(line.split(",")[6]);
+                        DebitCardType existingDebitCardType = DebitCardType.valueOf(line.split(",")[6]);
                         if (numberOfAccounts == 1) {
                             if (existingEmail.equalsIgnoreCase(email)) {
-                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
+                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, existingBalance, existingAccountType, existingAccountStatus, overdraftCount, existingDebitCardType);
 
                                 break;
                             }
                         } else if (numberOfAccounts > 1) {
                             if (existingEmail.equalsIgnoreCase(email) && existingAccountNumber == accountNumber) {
-                                currentBankAccount = new BankAccount(existingEmail, accountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
+                                currentBankAccount = new BankAccount(existingEmail, existingAccountNumber, existingBalance, existingAccountType, existingAccountStatus, overdraftCount, existingDebitCardType);
 
                                 break;
                             }
@@ -598,11 +1007,24 @@ public class BankAccount {
                     }
                     amount = Double.parseDouble(inputAmount);
 
-                    boolean successful = withdrawMoney(amount, currentBankAccount);
-                    if (successful) {
-                        currentBankAccount.addTransactionToFile("WITHDRAW", amount);
+                    if (!reachedLimitPerDay(accountNumber, currentBankAccount, "WITHDRAW", amount, 0)) {
+                        boolean successful = withdrawMoney(amount, currentBankAccount);
+                        if (successful) {
+                            currentBankAccount.addTransactionToFile("WITHDRAW", amount);
+                        }
                     }
+
                 } else if (transaction == 'd' || transaction == 'D') {
+                    System.out.print("Enter account number you want to deposit into:");
+//                    amount = scanner.nextDouble();
+//                    scanner.nextLine();
+                    String inputAccountNumber = scanner.nextLine();
+                    if (!inputAccountNumber.matches("\\d+(\\.\\d+)?")) {
+                        System.out.println("Invalid account number. Please enter a valid number.");
+                        continue;
+                    }
+                    accountNumber = Integer.parseInt(inputAccountNumber);
+
                     System.out.print("how much money you want to deposit?");
 //                    amount = scanner.nextDouble();
 //                    scanner.nextLine();
@@ -612,11 +1034,13 @@ public class BankAccount {
                         continue;
                     }
                     amount = Double.parseDouble(inputAmount);
-
-                    boolean successful = depositMoney(amount, currentBankAccount);
-                    if (successful) {
-                        currentBankAccount.addTransactionToFile("DEPOSIT", amount);
+                    if (!reachedLimitPerDay(accountNumber, currentBankAccount, "DEPOSIT", amount, 0)) {
+                        boolean successful = depositMoney(amount, accountNumber);
+                        if (successful) {
+                            currentBankAccount.addTransactionToFile("DEPOSIT", amount);
+                        }
                     }
+
                 } else if (transaction == 't' || transaction == 'T') {
                     System.out.print("how much money you want to transfer?");
 //                    amount = scanner.nextDouble();
@@ -637,11 +1061,14 @@ public class BankAccount {
                     }
 
                     int toAccountNumber = Integer.parseInt(inputToAccountNumber);
+                    if (!reachedLimitPerDay(accountNumber, currentBankAccount, "TRANSFER", amount, toAccountNumber)) {
 
-                    boolean successful = transferMoney(currentBankAccount, toAccountNumber, amount);
-                    if (successful) {
-                        currentBankAccount.addTransactionToFile("TRANSFER", amount);
+                        boolean successful = transferMoney(currentBankAccount, toAccountNumber, amount);
+                        if (successful) {
+                            currentBankAccount.addTransactionToFile("TRANSFER", amount);
+                        }
                     }
+
                 } else {
                     System.out.println("Please enter valid type of transaction(w or d or t), w for Withdraw Money, d for Deposit Money, t for Transfer Money");
                     return;
@@ -667,16 +1094,24 @@ public class BankAccount {
             }
 
         }
-        System.out.println("Do you want to view transactions History?");
-        String input = scanner.nextLine();
+        String input;
+        while (true) {
+            System.out.println("Do you want to view transactions History?");
+            input = scanner.nextLine();
 //        scanner.nextLine();
 
-        if (input.equalsIgnoreCase("yes")) {
-            transactionsHistory(loggedInUser.getEmail());
-        } else if (!input.equalsIgnoreCase("No")) {
-            System.out.println("please enter yes or no");
-            return;
+            if (input.equalsIgnoreCase("yes")) {
+                transactionsHistory(loggedInUser.getEmail());
+                break;
+            } else if (input.equalsIgnoreCase("No")) {
+                break;
+            }
+            else {
+                System.out.println("please enter yes or no");
+            }
         }
+
+        System.out.println("Thank you !!");
 
     }
 

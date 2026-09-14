@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Login {
-    private String email;
+    private final String email;
 
     public Login(String email) {
         this.email = email;
@@ -87,7 +87,7 @@ public class Login {
     public int displayBankAccounts() {
         File file2 = new File("bankAccounts.txt");
         boolean hasBankAccount = false;
-        int bankAcounts = 0;
+        int bankAccounts = 0;
         if (file2.exists()) {
             try {
                 Scanner fileScanner2 = new Scanner(file2);
@@ -102,8 +102,8 @@ public class Login {
 
                     if (existingEmail.equalsIgnoreCase(this.email)) {
                         hasBankAccount = true;
-                        bankAcounts++;
-                        System.out.println("\n------Account" + bankAcounts + "------");
+                        bankAccounts++;
+                        System.out.println("\n------Account" + bankAccounts + "------");
                         System.out.println("Account Number: " + accountNumber);
                         System.out.println("Account Type: " + accountType);
                         System.out.println("Balance: " + balance);
@@ -120,7 +120,7 @@ public class Login {
         } else {
             System.out.println("bankAccounts.txt does not exist.");
         }
-        return bankAcounts;
+        return bankAccounts;
     }
 }
 
