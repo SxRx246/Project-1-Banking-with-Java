@@ -28,10 +28,58 @@ public class BankAccount {
 
     private AccountStatus accountStatus;
 
+    //    public enum DebitCardType {
+//        MASTERCARD,
+//        MASTERCARD_TITANIUM,
+//        MASTERCARD_PLATINUM
+//    }
     public enum DebitCardType {
-        MASTERCARD,
-        MASTERCARD_TITANIUM,
-        MASTERCARD_PLATINUM
+
+        MASTERCARD(5_000, 200_000, 100_000, 20_000, 10_000),
+
+        MASTERCARD_TITANIUM(10_000, 200_000, 100_000, 40_000, 20_000),
+
+        MASTERCARD_PLATINUM(20_000, 200_000, 100_000, 80_000, 40_000);
+
+        private final double withdrawLimit;
+        private final double ownDepositLimit;
+        private final double otherDepositLimit;
+        private final double ownTransferLimit;
+        private final double otherTransferLimit;
+
+        DebitCardType(
+                double withdrawLimit,
+                double ownDepositLimit,
+                double otherDepositLimit,
+                double ownTransferLimit,
+                double otherTransferLimit) {
+
+            this.withdrawLimit = withdrawLimit;
+            this.ownDepositLimit = ownDepositLimit;
+            this.otherDepositLimit = otherDepositLimit;
+            this.ownTransferLimit = ownTransferLimit;
+            this.otherTransferLimit = otherTransferLimit;
+        }
+
+        public double getWithdrawLimit() {
+            return withdrawLimit;
+        }
+
+        public double getOwnDepositLimit() {
+            return ownDepositLimit;
+        }
+
+        public double getOtherDepositLimit() {
+            return otherDepositLimit;
+        }
+
+        public double getOwnTransferLimit() {
+            return ownTransferLimit;
+        }
+
+        public double getOtherTransferLimit() {
+            return otherTransferLimit;
+        }
     }
 
     private DebitCardType debitCardType;
@@ -504,11 +552,320 @@ public class BankAccount {
         }
     }
 
+//    public static boolean reachedLimitPerDay(int accountNumber, BankAccount bankAccount, String transactionType, double currentTransactionAmount, int targetAccountNumber) {
+//        File file1 = new File("bankAccounts.txt");
+//        DebitCardType debitCardType = null;
+//        boolean ownAccount = false;
+//        boolean transferToOwnAccount = false;
+//
+////        to check whether transaction been done to his own account or no, and to get the debitCardType
+//        try {
+//            if (file1.exists()) {
+//                Scanner fileScanner = new Scanner(file1);
+//
+//                while (fileScanner.hasNextLine()) {
+//                    String line = fileScanner.nextLine();
+//
+//                    DebitCardType existingDebitCardType = DebitCardType.valueOf(line.split(",")[6]);
+//                    int existingAccountNumber = Integer.valueOf(line.split(",")[0]);
+//                    String existingEmail = String.valueOf(line.split(",")[1]);
+//
+//
+//                    if (existingAccountNumber == accountNumber) {
+//                        debitCardType = existingDebitCardType;
+//                        if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
+//                            ownAccount = true;
+//                        }
+//                    } else if (existingAccountNumber == targetAccountNumber) {
+//                        if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
+//                            transferToOwnAccount = true;
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (IOException e) {
+//            System.out.println("error");
+//        }
+//
+//        File file = new File("transactions.txt");
+//        boolean limitReached = false;
+//
+//        double totalAmountWithdrawPerDay = 0;
+//        double totalAmountTransferPerDay = 0;
+//        double totalAmountOwnTransferPerDay = 0;
+//        double totalAmountDepositPerDay = 0;
+//        double totalAmountOwnDepositPerDay = 0;
+//
+//        try {
+//            if (file.exists()) {
+//                Scanner fileScanner = new Scanner(file);
+//
+//                while (fileScanner.hasNextLine()) {
+//                    String line = fileScanner.nextLine();
+//
+//                    if (line.trim().isEmpty()) {
+//                        continue;
+//                    }
+//
+//                    String[] fields = line.split(",");
+//
+//                    if (fields.length < 8) {
+//                        System.out.println("Skipping invalid transaction record: " + line);
+//                        continue;
+//                    }
+//
+//                    String date = fields[0];
+//                    int existingAccountNumber = Integer.parseInt(fields[3]);
+//                    String existingTransactionType = fields[5];
+//                    double amount = Double.parseDouble(fields[6]);
+//
+//
+////                    String date = line.split(",")[0];
+//////                    String time = line.split(",")[1];
+//////                    String existingEmail = line.split(",")[2];
+////                    int existingAccountNumber = Integer.valueOf(line.split(",")[3]);
+//////                    String accountType = line.split(",")[4];
+////                    String existingTransactionType = line.split(",")[5];
+////                    double amount = Double.parseDouble(line.split(",")[6]);
+//////                    double balance = Double.parseDouble(line.split(",")[7]);
+//
+//
+//                    if (existingAccountNumber == accountNumber) {
+//                        if (date.equals(String.valueOf(LocalDate.now()))) {
+//                            if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
+//                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+//                                    totalAmountWithdrawPerDay += amount;
+//                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+//                                    if (ownAccount) {
+//                                        totalAmountOwnDepositPerDay += amount;
+//                                    } else {
+//                                        totalAmountDepositPerDay += amount;
+//                                    }
+//                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+//                                    if (transferToOwnAccount) {
+//                                        totalAmountOwnTransferPerDay += amount;
+//                                    } else {
+//                                        totalAmountTransferPerDay += amount;
+//                                    }
+//                                }
+//                            } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
+//                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+//                                    totalAmountWithdrawPerDay += amount;
+//                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+//                                    if (ownAccount) {
+//                                        totalAmountOwnDepositPerDay += amount;
+//                                    } else {
+//                                        totalAmountDepositPerDay += amount;
+//                                    }
+//                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+//                                    if (transferToOwnAccount) {
+//                                        totalAmountOwnTransferPerDay += amount;
+//                                    } else {
+//                                        totalAmountTransferPerDay += amount;
+//                                    }
+//                                }
+//                            } else if (debitCardType == DebitCardType.MASTERCARD) {
+//                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+//                                    totalAmountWithdrawPerDay += amount;
+//                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+//                                    if (ownAccount) {
+//                                        totalAmountOwnDepositPerDay += amount;
+//                                    } else {
+//                                        totalAmountDepositPerDay += amount;
+//                                    }
+//                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+//                                    if (transferToOwnAccount) {
+//                                        totalAmountOwnTransferPerDay += amount;
+//                                    } else {
+//                                        totalAmountTransferPerDay += amount;
+//                                    }
+//                                }
+//                            } else {
+//                                System.out.println("Invalid Mastercard Type");
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
+//            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+//                if (totalAmountWithdrawPerDay + currentTransactionAmount > 20_000) {
+//                    System.out.println("you can't withdraw more than 20,000 BD per day");
+////                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+//                    return true;
+//                } else {
+//                    return false;
+//                }
+//            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+//                if (ownAccount) {
+//                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+//                        System.out.println("you can't deposit more than 200,000 BD per day into your account");
+////                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+//                        System.out.println("you can't deposit more than 100,000 BD per day");
+////                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//
+//            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+//                if (transferToOwnAccount) {
+//                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 80_000) {
+//                        System.out.println("you can't transfer more than 80,000 BD per day from your account");
+////                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountTransferPerDay + currentTransactionAmount > 40_000) {
+//                        System.out.println("you can't transfer more than 40,000 BD per day into another persons account");
+////                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//            } else {
+//                System.out.println("Invalid Transaction Type");
+//            }
+//        } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
+//            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+//                if (totalAmountWithdrawPerDay + currentTransactionAmount > 10_000) {
+//                    System.out.println("you can't withdraw more than 10,000 BD per day");
+////                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+//                    return true;
+//                } else {
+//                    return false;
+//                }
+//            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+//                if (ownAccount) {
+//                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+//                        System.out.println("you can't deposit more than 100,000 BD per day");
+////                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+//                        System.out.println("you can't deposit more than 100,000 BD per day");
+////                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//
+//            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+//                if (transferToOwnAccount) {
+//                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 40_000) {
+//                        System.out.println("you can't transfer more than 40,000 BD per day");
+////                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountTransferPerDay + currentTransactionAmount > 20_000) {
+//                        System.out.println("you can't transfer more than 40,000 BD per day");
+////                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//            } else {
+//                System.out.println("Invalid Transaction Type");
+//            }
+//        } else if (debitCardType == DebitCardType.MASTERCARD) {
+//            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+//                if (totalAmountWithdrawPerDay + currentTransactionAmount > 5_000) {
+//                    System.out.println("you can't withdraw more than 5,000 BD per day");
+////                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
+//                    return true;
+//                } else {
+//                    return false;
+//                }
+//            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+//                if (ownAccount) {
+//                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
+//                        System.out.println("you can't deposit more than 100,000 BD per day");
+////                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
+//                        System.out.println("you can't deposit more than 100,000 BD per day");
+////                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//
+//            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+//                if (transferToOwnAccount) {
+//                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 20_000) {
+//                        System.out.println("you can't transfer more than 40,000 BD per day");
+////                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                } else {
+//                    if (totalAmountTransferPerDay + currentTransactionAmount > 10_000) {
+//                        System.out.println("you can't transfer more than 40,000 BD per day");
+////                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                }
+//            }
+//        } else {
+//            System.out.println("Invalid Transaction Type");
+//        }
+////                            if(date == String.valueOf(LocalDate.now())){
+////                                totalAmountPerDay +=amount;
+////                            }
+////                            if(totalAmountPerDay + currentTransactionAmount>20000){
+////                                System.out.println("you can't withdraw more than 20000 BD per day" +
+////                                        "\n you already withdraw "+ totalAmountPerDay +" BD today");
+////                            }
+////                        }
+////                        else if()
+//
+//
+//        return true;
+//    }
+
     public static boolean reachedLimitPerDay(int accountNumber, BankAccount bankAccount, String transactionType, double currentTransactionAmount, int targetAccountNumber) {
-        File file1 = new File("bankAccounts.txt");
+
+        double totalAmountWithdrawPerDay = 0;
+        double totalAmountTransferPerDay = 0;
+        double totalAmountOwnTransferPerDay = 0;
+        double totalAmountDepositPerDay = 0;
+        double totalAmountOwnDepositPerDay = 0;
+
         DebitCardType debitCardType = null;
         boolean ownAccount = false;
         boolean transferToOwnAccount = false;
+
+        File file1 = new File("bankAccounts.txt");
 
 //        to check whether transaction been done to his own account or no, and to get the debitCardType
         try {
@@ -518,9 +875,19 @@ public class BankAccount {
                 while (fileScanner.hasNextLine()) {
                     String line = fileScanner.nextLine();
 
-                    DebitCardType existingDebitCardType = DebitCardType.valueOf(line.split(",")[6]);
-                    int existingAccountNumber = Integer.valueOf(line.split(",")[0]);
-                    String existingEmail = String.valueOf(line.split(",")[1]);
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",");
+
+                    if (fields.length < 7) {
+                        continue;
+                    }
+
+                    int existingAccountNumber = Integer.valueOf(fields[0]);
+                    String existingEmail = String.valueOf(fields[1]);
+                    DebitCardType existingDebitCardType = DebitCardType.valueOf(fields[6]);
 
 
                     if (existingAccountNumber == accountNumber) {
@@ -528,25 +895,20 @@ public class BankAccount {
                         if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
                             ownAccount = true;
                         }
-                    } else if (existingAccountNumber == targetAccountNumber) {
+                    }
+                    else if (existingAccountNumber == targetAccountNumber) {
                         if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
                             transferToOwnAccount = true;
                         }
                     }
                 }
+                fileScanner.close();
             }
-        } catch (IOException e) {
-            System.out.println("error");
+        } catch (FileNotFoundException e) {
+            System.out.println("bankAccounts file not found");
         }
 
         File file = new File("transactions.txt");
-        boolean limitReached = false;
-
-        double totalAmountWithdrawPerDay = 0;
-        double totalAmountTransferPerDay = 0;
-        double totalAmountOwnTransferPerDay = 0;
-        double totalAmountDepositPerDay = 0;
-        double totalAmountOwnDepositPerDay = 0;
 
         try {
             if (file.exists()) {
@@ -571,239 +933,81 @@ public class BankAccount {
                     String existingTransactionType = fields[5];
                     double amount = Double.parseDouble(fields[6]);
 
-
-//                    String date = line.split(",")[0];
-////                    String time = line.split(",")[1];
-////                    String existingEmail = line.split(",")[2];
-//                    int existingAccountNumber = Integer.valueOf(line.split(",")[3]);
-////                    String accountType = line.split(",")[4];
-//                    String existingTransactionType = line.split(",")[5];
-//                    double amount = Double.parseDouble(line.split(",")[6]);
-////                    double balance = Double.parseDouble(line.split(",")[7]);
-
-
-                    if (existingAccountNumber == accountNumber) {
-                        if (date.equals(String.valueOf(LocalDate.now()))) {
-                            if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
-                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
-                                    totalAmountWithdrawPerDay += amount;
-                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
-                                    if (ownAccount) {
-                                        totalAmountOwnDepositPerDay += amount;
-                                    } else {
-                                        totalAmountDepositPerDay += amount;
-                                    }
-                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
-                                    if (transferToOwnAccount) {
-                                        totalAmountOwnTransferPerDay += amount;
-                                    } else {
-                                        totalAmountTransferPerDay += amount;
-                                    }
-                                }
-                            } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
-                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
-                                    totalAmountWithdrawPerDay += amount;
-                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
-                                    if (ownAccount) {
-                                        totalAmountOwnDepositPerDay += amount;
-                                    } else {
-                                        totalAmountDepositPerDay += amount;
-                                    }
-                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
-                                    if (transferToOwnAccount) {
-                                        totalAmountOwnTransferPerDay += amount;
-                                    } else {
-                                        totalAmountTransferPerDay += amount;
-                                    }
-                                }
-                            } else if (debitCardType == DebitCardType.MASTERCARD) {
-                                if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
-                                    totalAmountWithdrawPerDay += amount;
-                                } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
-                                    if (ownAccount) {
-                                        totalAmountOwnDepositPerDay += amount;
-                                    } else {
-                                        totalAmountDepositPerDay += amount;
-                                    }
-                                } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
-                                    if (transferToOwnAccount) {
-                                        totalAmountOwnTransferPerDay += amount;
-                                    } else {
-                                        totalAmountTransferPerDay += amount;
-                                    }
-                                }
+                    if (existingAccountNumber == accountNumber && date.equals(String.valueOf(LocalDate.now()))) {
+                        if (existingTransactionType.equalsIgnoreCase("WITHDRAW")) {
+                            totalAmountWithdrawPerDay += amount;
+                        } else if (existingTransactionType.equalsIgnoreCase("DEPOSIT")) {
+                            if (ownAccount) {
+                                totalAmountOwnDepositPerDay += amount;
                             } else {
-                                System.out.println("Invalid Mastercard Type");
+                                totalAmountDepositPerDay += amount;
+                            }
+                        } else if (existingTransactionType.equalsIgnoreCase("TRANSFER")) {
+                            if (transferToOwnAccount) {
+                                totalAmountOwnTransferPerDay += amount;
+                            } else {
+                                totalAmountTransferPerDay += amount;
                             }
                         }
                     }
                 }
+                fileScanner.close();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            System.out.println("Transactions file not found");
         }
 
-        if (debitCardType == DebitCardType.MASTERCARD_PLATINUM) {
-            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
-                if (totalAmountWithdrawPerDay + currentTransactionAmount > 20_000) {
-                    System.out.println("you can't withdraw more than 20,000 BD per day");
-//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
-                if (ownAccount) {
-                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
-                        System.out.println("you can't deposit more than 200,000 BD per day into your account");
-//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
-                        System.out.println("you can't deposit more than 100,000 BD per day");
-//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+        if (debitCardType == null) {
+            System.out.println("Account could not be found.");
+            return true;
+        }
 
-            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
-                if (transferToOwnAccount) {
-                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 80_000) {
-                        System.out.println("you can't transfer more than 80,000 BD per day from your account");
-//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountTransferPerDay + currentTransactionAmount > 40_000) {
-                        System.out.println("you can't transfer more than 40,000 BD per day into another persons account");
-//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+        double limit;
+        double totalAmount;
+
+        if (transactionType.equalsIgnoreCase("WITHDRAW")) {
+
+            limit = debitCardType.getWithdrawLimit();
+            totalAmount = totalAmountWithdrawPerDay;
+
+        } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
+
+            if (ownAccount) {
+                limit = debitCardType.getOwnDepositLimit();
+                totalAmount = totalAmountOwnDepositPerDay;
             } else {
-                System.out.println("Invalid Transaction Type");
+                limit = debitCardType.getOtherDepositLimit();
+                totalAmount = totalAmountDepositPerDay;
             }
-        } else if (debitCardType == DebitCardType.MASTERCARD_TITANIUM) {
-            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
-                if (totalAmountWithdrawPerDay + currentTransactionAmount > 10_000) {
-                    System.out.println("you can't withdraw more than 10,000 BD per day");
-//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
-                if (ownAccount) {
-                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
-                        System.out.println("you can't deposit more than 100,000 BD per day");
-//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
-                        System.out.println("you can't deposit more than 100,000 BD per day");
-//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
 
-            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
-                if (transferToOwnAccount) {
-                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 40_000) {
-                        System.out.println("you can't transfer more than 40,000 BD per day");
-//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountTransferPerDay + currentTransactionAmount > 20_000) {
-                        System.out.println("you can't transfer more than 40,000 BD per day");
-//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+        } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
+
+            if (transferToOwnAccount) {
+                limit = debitCardType.getOwnTransferLimit();
+                totalAmount = totalAmountOwnTransferPerDay;
             } else {
-                System.out.println("Invalid Transaction Type");
+                limit = debitCardType.getOtherTransferLimit();
+                totalAmount = totalAmountTransferPerDay;
             }
-        } else if (debitCardType == DebitCardType.MASTERCARD) {
-            if (transactionType.equalsIgnoreCase("WITHDRAW")) {
-                if (totalAmountWithdrawPerDay + currentTransactionAmount > 5_000) {
-                    System.out.println("you can't withdraw more than 5,000 BD per day");
-//                            "\n you already withdraw " + totalAmountWithdrawPerDay + " BD today");
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if (transactionType.equalsIgnoreCase("DEPOSIT")) {
-                if (ownAccount) {
-                    if (totalAmountOwnDepositPerDay + currentTransactionAmount > 200_000) {
-                        System.out.println("you can't deposit more than 100,000 BD per day");
-//                                "\n you already deposit " + totalAmountOwnDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountDepositPerDay + currentTransactionAmount > 100_000) {
-                        System.out.println("you can't deposit more than 100,000 BD per day");
-//                                "\n you already deposit " + totalAmountDepositPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
 
-            } else if (transactionType.equalsIgnoreCase("TRANSFER")) {
-                if (transferToOwnAccount) {
-                    if (totalAmountOwnTransferPerDay + currentTransactionAmount > 20_000) {
-                        System.out.println("you can't transfer more than 40,000 BD per day");
-//                                "\n you already transfer " + totalAmountOwnTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if (totalAmountTransferPerDay + currentTransactionAmount > 10_000) {
-                        System.out.println("you can't transfer more than 40,000 BD per day");
-//                                "\n you already transfer " + totalAmountTransferPerDay + " BD today");
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-            }
         } else {
-            System.out.println("Invalid Transaction Type");
+
+            System.out.println("Invalid transaction type.");
+            return true;
         }
-//                            if(date == String.valueOf(LocalDate.now())){
-//                                totalAmountPerDay +=amount;
-//                            }
-//                            if(totalAmountPerDay + currentTransactionAmount>20000){
-//                                System.out.println("you can't withdraw more than 20000 BD per day" +
-//                                        "\n you already withdraw "+ totalAmountPerDay +" BD today");
-//                            }
-//                        }
-//                        else if()
 
+        if (totalAmount + currentTransactionAmount > limit) {
 
-        return true;
+            System.out.println(
+                    "You can't " + transactionType.toLowerCase() + " more than " + limit + " BD per day."
+            );
+
+            return true;
+        }
+
+        return false;
     }
+
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -920,8 +1124,7 @@ public class BankAccount {
                 break;
             } else if (check.equalsIgnoreCase("No")) {
                 break;
-            }
-            else {
+            } else {
                 System.out.println("Please enter yes or no");
             }
         }
@@ -1094,6 +1297,7 @@ public class BankAccount {
             }
 
         }
+
         String input;
         while (true) {
             System.out.println("Do you want to view transactions History?");
@@ -1105,8 +1309,7 @@ public class BankAccount {
                 break;
             } else if (input.equalsIgnoreCase("No")) {
                 break;
-            }
-            else {
+            } else {
                 System.out.println("please enter yes or no");
             }
         }

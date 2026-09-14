@@ -16,6 +16,7 @@ public class Login {
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
+        int incorrectLogin = 0;
 
         while (true) {
             System.out.println("------Login------");
@@ -69,8 +70,17 @@ public class Login {
 //                        loggedInUser.displayBankAccounts();
                         break;
                     } else {
+                        incorrectLogin++;
                         System.out.println("Incorrect email or password");
                         System.out.println("Please try again!!");
+                        if (incorrectLogin == 3) {
+                            System.out.println("try to login after 1 min");
+
+                            Thread.sleep(60 * 1000);
+
+                            incorrectLogin = 0;
+                        }
+
                     }
                 } catch (FileNotFoundException e) {
                     System.out.println("Error reading accounts file.");
