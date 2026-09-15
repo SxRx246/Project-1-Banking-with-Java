@@ -437,7 +437,7 @@ public class BankAccount {
                             double ToAccountBalance = Double.parseDouble(fields[2]);
                             ToAccountBalance += amount;
                             fields[2] = String.valueOf(ToAccountBalance);
-                            if(fields[4].equalsIgnoreCase("DEACTIVATED") && ToAccountBalance>= 0){
+                            if (fields[4].equalsIgnoreCase("DEACTIVATED") && ToAccountBalance >= 0) {
                                 fields[4] = "ACTIVE";
                             }
                             line = String.join(",", fields);
@@ -1013,6 +1013,74 @@ public class BankAccount {
         return false;
     }
 
+    public static int getUserAccountCount(String email) {
+
+        int count = 0;
+
+        File file = new File("bankAccounts.txt");
+
+        if (file.exists()) {
+            try {
+                Scanner fileScanner = new Scanner(file);
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",");
+
+                    if (fields[1].equalsIgnoreCase(email)) {
+                        count++;
+                    }
+                }
+
+                fileScanner.close();
+
+            } catch (FileNotFoundException e) {
+                System.out.println("Error reading bank accounts.");
+            }
+        }
+
+        return count;
+    }
+
+    public static boolean hasAccountType(String email, AccountType type) {
+
+        File file = new File("bankAccounts.txt");
+
+        if (file.exists()) {
+            try {
+                Scanner fileScanner = new Scanner(file);
+
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",");
+
+                    if (fields[1].equalsIgnoreCase(email)
+                            && AccountType.valueOf(fields[3]) == type) {
+                        fileScanner.close();
+                        return true;
+                    }
+                }
+
+                fileScanner.close();
+
+            } catch (Exception e) {
+                System.out.println("Error reading bank accounts.");
+            }
+        }
+
+        return false;
+    }
+
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -1028,6 +1096,14 @@ public class BankAccount {
 
         String addAccount;
         while (true) {
+            int numberOfAccounts = getUserAccountCount(email);
+
+            if (numberOfAccounts >= 2) {
+                System.out.println("You already have 2 accounts.");
+                System.out.println("You can only have one Checking and one Savings account.");
+                break;
+            }
+
             System.out.print("Do you want to add new bank account?(Enter yes or No)");
             addAccount = scanner.nextLine();
 
@@ -1040,25 +1116,56 @@ public class BankAccount {
             DebitCardType debitCardType = null;
 
             if (addAccount.equalsIgnoreCase("yes")) {
-                Random random = new Random();
-                accountNumber = 100000 + random.nextInt(900000);
+
+
+//                while (true) {
+//                    System.out.println("Account Type Checking or Saving?(Enter C or S)");
+//                    char checkAccountType = scanner.next().charAt(0);
+//                    scanner.nextLine();
+//
+//                    if (checkAccountType == 'c' || checkAccountType == 'C') {
+//                        accountType = AccountType.CHECKING;
+//                        break;
+//                    } else if (checkAccountType == 's' || checkAccountType == 'S') {
+//                        accountType = AccountType.SAVINGS;
+//                        break;
+//                    } else {
+//                        System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
+//                        continue;
+//                    }
+//                }
 
                 while (true) {
-                    System.out.println("Account Type Checking or Saving?(Enter C or S)");
-                    char checkAccountType = scanner.next().charAt(0);
-                    scanner.nextLine();
+                    boolean hasChecking = hasAccountType(email, AccountType.CHECKING);
+                    boolean hasSavings = hasAccountType(email, AccountType.SAVINGS);
 
-                    if (checkAccountType == 'c' || checkAccountType == 'C') {
+                    System.out.println("\nChoose account type:");
+
+                    if (!hasChecking) {
+                        System.out.println("C - Checking");
+                    }
+
+                    if (!hasSavings) {
+                        System.out.println("S - Savings");
+                    }
+
+                    System.out.print("Enter your choice (s or c): ");
+                    char choice = scanner.nextLine().charAt(0);
+
+                    if ((choice == 'C' || choice == 'c') && !hasChecking) {
                         accountType = AccountType.CHECKING;
                         break;
-                    } else if (checkAccountType == 's' || checkAccountType == 'S') {
+                    }
+
+                    if ((choice == 'S' || choice == 's') && !hasSavings) {
                         accountType = AccountType.SAVINGS;
                         break;
-                    } else {
-                        System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
-                        continue;
                     }
+                    System.out.println("Please choose one of the available account types.");
                 }
+
+                Random random = new Random();
+                accountNumber = 100000 + random.nextInt(900000);
 
                 accountStatus = AccountStatus.ACTIVE;
 
@@ -1089,8 +1196,8 @@ public class BankAccount {
                             "\n 2. Mastercard Titanium" +
                             "\n 3. Mastercard");
                     String inputDebitCardType = scanner.nextLine();
-                    if (!inputDebitCardType.matches("\\d+")) {
-                        System.out.println("Invalid input. Please enter numbers only.");
+                    if (!inputDebitCardType.matches("[1-3]")) {
+                        System.out.println("Invalid input. Please enter numbers only from 1 to 3.");
                         continue;
                     }
                     int debitCardTypeChoosed = Integer.parseInt(inputDebitCardType);
@@ -1110,7 +1217,7 @@ public class BankAccount {
                 BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
 
                 addingAccountTofile(bankAccount);
-                break;
+//                break;
             } else if (addAccount.equalsIgnoreCase("no")) {
                 break;
             } else {
