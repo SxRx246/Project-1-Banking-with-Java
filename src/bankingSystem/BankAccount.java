@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -895,8 +898,7 @@ public class BankAccount {
                         if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
                             ownAccount = true;
                         }
-                    }
-                    else if (existingAccountNumber == targetAccountNumber) {
+                    } else if (existingAccountNumber == targetAccountNumber) {
                         if (existingEmail.equalsIgnoreCase(bankAccount.getUserEmail())) {
                             transferToOwnAccount = true;
                         }
@@ -1300,7 +1302,7 @@ public class BankAccount {
 
         String input;
         while (true) {
-            System.out.println("Do you want to view transactions History?");
+            System.out.println("Do you want to view all transactions History?");
             input = scanner.nextLine();
 //        scanner.nextLine();
 
@@ -1313,6 +1315,145 @@ public class BankAccount {
                 System.out.println("please enter yes or no");
             }
         }
+
+//        String input2;
+//        while (true) {
+//            System.out.println("Do you want to filter the transactions");
+//            input2 = scanner.nextLine();
+//            if (input2.equalsIgnoreCase("yes")) {
+                String filter;
+                while (true) {
+                    System.out.print("\nChoose one filter: " +
+                            "\n 1. Today's Transactions" +
+                            "\n 2. Yesterday's Transactions" +
+                            "\n 3. Last Week Transactions" +
+                            "\n 4. Last 7 Days Transactions" +
+                            "\n 5. Last Month Transactions" +
+                            "\n 6. Last 30 Days" +
+                            "\n 7. Exit Transactions Filter" +
+                            "\n Enter a number (1-7): ");
+                    filter = scanner.nextLine();
+                    if (!filter.matches("[1-7]")) {
+                        System.out.println("Please enter a valid number(1-7)");
+                    }
+//                    else {
+//                        break;
+//                    }
+
+                    LocalDate today = LocalDate.now();
+
+                    if (filter.equals("1")) {
+                        try {
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> {
+                                        String date = line.split(",")[0];
+                                        return date.equals(today.toString());
+                                    })
+                                    .forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transaction file not found");
+                        }
+                    } else if (filter.equals("2")) {
+                        try {
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> {
+                                        String date = line.split(",")[0];
+                                        LocalDate yesterday = today.minusDays(1);
+                                        return date.equals(yesterday.toString());
+                                    })
+                                    .forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transaction file not found");
+                        }
+                    } else if (filter.equals("3")) {
+//                        LocalDate startOfThisWeek = today.with(DayOfWeek.SUNDAY);
+                        LocalDate startOfThisWeek = today.minusDays((today.getDayOfWeek().getValue() % 7));
+                        LocalDate startOfLastWeek = startOfThisWeek.minusWeeks(1);
+                        LocalDate endOfLastWeek = startOfThisWeek.minusDays(1);
+
+                        System.out.println("Start of last week: " + startOfLastWeek);
+                        System.out.println("End of last week: " + endOfLastWeek);
+                        try {
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> !line.isBlank())
+                                    .filter(line -> {
+                                        LocalDate date = LocalDate.parse(line.split(",")[0]);
+                                        return !date.isBefore(startOfLastWeek) &&
+                                                !date.isAfter(endOfLastWeek);
+                                    }
+                            ).forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transactions file not found");
+                        }
+                    } else if (filter.equals("4")) {
+                        try {
+                            LocalDate last7Days = today.minusDays(6);
+
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> !line.isBlank())
+                                    .filter(line -> {
+                                        LocalDate date = LocalDate.parse(line.split(",")[0]);
+                                        return !date.isBefore(last7Days)
+                                                && !date.isAfter(today);
+                                    })
+                                    .forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transaction file not found");
+                        }
+                    } else if (filter.equals("5")) {
+                        try {
+                            LocalDate startOfLastMonth =
+                                    today.minusMonths(1).withDayOfMonth(1);
+
+                            LocalDate endOfLastMonth =
+                                    today.withDayOfMonth(1).minusDays(1);
+
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> !line.isBlank())
+                                    .filter(line -> {
+                                        LocalDate date = LocalDate.parse(line.split(",")[0]);
+                                        return !date.isBefore(startOfLastMonth)
+                                                && !date.isAfter(endOfLastMonth);
+                                    })
+                                    .forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transaction file not found");
+                        }
+
+
+                    } else if (filter.equals("6")) {
+                        try {
+                            LocalDate last30Days = today.minusDays(29);
+
+                            Files.lines(Path.of("transactions.txt"))
+                                    .filter(line -> !line.isBlank())
+                                    .filter(line -> {
+                                        LocalDate date = LocalDate.parse(line.split(",")[0]);
+                                        return !date.isBefore(last30Days)
+                                                && !date.isAfter(today);
+                                    })
+                                    .forEach(System.out::println);
+                        } catch (IOException e) {
+                            System.out.println("Transaction file not found");
+                        }
+                    }
+                    else if(filter.equals("7")){
+                        break;
+                    }
+                    else {
+                        System.out.println("Invalid number been entered");
+                        continue;
+                    }
+                }
+//                transactionsHistory(loggedInUser.getEmail());
+//                break;
+//            } else if (input2.equalsIgnoreCase("No")) {
+//                break;
+//            } else {
+//                System.out.println("please enter yes or no");
+//            }
+//        }
+
 
         System.out.println("Thank you !!");
 
