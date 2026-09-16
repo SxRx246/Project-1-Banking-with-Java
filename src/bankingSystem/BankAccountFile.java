@@ -85,6 +85,7 @@ public class BankAccountFile {
             System.out.println("bank accounts file not found");
         }
     }
+
     public static void addingAccountTofile(bankingSystem.BankAccount bankAccount) {
         try {
             FileWriter writer = new FileWriter("bankAccounts.txt", true);
