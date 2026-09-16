@@ -4,6 +4,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import java.security.SecureRandom;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class SignUp {
@@ -12,13 +14,17 @@ public class SignUp {
     private String email;
     private String password;
     private String role;
+    private int failedAttemps;
+    private LocalDateTime lockedUntil;
 
-    public SignUp(String firstName,String lastName,String email, String password) {
+    public SignUp(String firstName,String lastName,String email, String password,int failedAttemps, LocalDateTime lockedUntil ) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         role = "Customer";
+        this.failedAttemps = failedAttemps;
+        this.lockedUntil = lockedUntil;
     }
 
     public static String hashPassword(String password, byte[] salt) throws Exception {
@@ -98,18 +104,17 @@ public class SignUp {
                 String confirmedPassword = scanner.nextLine();
 
                 if (password.equals(confirmedPassword)) {
-                    // Generate salt
                     byte[] salt = new byte[16];
                     new SecureRandom().nextBytes(salt);
 
-                    // Hash password
                     String hashedPassword = hashPassword(password, salt);
 
-                    // Convert salt to String
                     String saltString =
                             java.util.HexFormat.of().formatHex(salt);
 
-                    SignUp account = new SignUp(firstName,lastName, email, hashedPassword);
+                    LocalDateTime lockedUntil = LocalDateTime.now();
+
+                    SignUp account = new SignUp(firstName,lastName, email, hashedPassword, 0, lockedUntil);
 
                     FileWriter writer = new FileWriter("accounts.txt", true);
 
@@ -119,7 +124,9 @@ public class SignUp {
                             account.email + "," +
                                     saltString + "," +
                                     hashedPassword + "," +
-                                    account.role
+                                    account.role + "," +
+                                    account.failedAttemps + "," +
+                                    account.lockedUntil
                     );
 
                     writer.write("\n");

@@ -1548,7 +1548,7 @@ public class BankAccount {
         }
 
 
-        System.out.println("Thank you !!");
+        System.out.println("\nThank you !!");
 
     }
 

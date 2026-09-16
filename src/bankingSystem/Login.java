@@ -1,6 +1,9 @@
 package bankingSystem;
 
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Login {
@@ -16,7 +19,6 @@ public class Login {
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
-        int incorrectLogin = 0;
 
         while (true) {
             System.out.println("------Login------");
@@ -28,20 +30,55 @@ public class Login {
 
             File file = new File("accounts.txt");
 
+            boolean loggedIn = false;
+            boolean emailFound = false;
+
             if (file.exists()) {
                 try {
                     Scanner fileScanner = new Scanner(file);
 
-                    boolean loggedIn = false;
+                    ArrayList<String> lines = new ArrayList<>();
 
                     while (fileScanner.hasNextLine()) {
                         String line = fileScanner.nextLine();
+                        String[] fields = line.split(",", -1);
 
-                        String existingEmail = line.split(",")[2];
-                        String salt = line.split(",")[3];
-                        String hashedPassword = line.split(",")[4];
+                        String existingEmail = fields[2];
 
                         if (existingEmail.equalsIgnoreCase(email)) {
+
+                            emailFound = true;
+
+                            String salt = fields[3];
+                            String hashedPassword = fields[4];
+
+                            int failedAttempts = Integer.parseInt(fields[6]);
+                            String lockedUntil = fields[7];
+
+                            // Check if account is locked
+                            if (!lockedUntil.isEmpty()) {
+
+                                LocalDateTime unlockTime =
+                                        LocalDateTime.parse(lockedUntil);
+
+                                if (LocalDateTime.now().isBefore(unlockTime)) {
+
+                                    System.out.println("Account is locked.");
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+                                    System.out.println("Please try again after: "
+                                            + unlockTime.format(formatter));
+
+                                    lines.add(line);
+                                    continue;
+                                }
+
+                                // 1 minute has passed
+                                failedAttempts = 0;
+                                fields[6] = "0";
+                                fields[7] = "";
+                            }
+
                             byte[] saltBytes =
                                     java.util.HexFormat.of().parseHex(salt);
 
@@ -50,12 +87,48 @@ public class Login {
 
                             if (enteredPasswordHash.equals(hashedPassword)) {
                                 loggedIn = true;
-                            }
 
-                            break;
+                                fields[6] = "0";
+                                fields[7] = "";
+                            }
+                            else {
+                            failedAttempts++;
+                            fields[6] = String.valueOf(failedAttempts);
+
+                            System.out.println(
+                                    "Incorrect email or password."
+                            );
+
+                            if (failedAttempts == 3) {
+
+                                LocalDateTime unlockTime =
+                                        LocalDateTime.now().plusMinutes(1);
+
+                                fields[7] = unlockTime.toString();
+                                System.out.println(
+                                        "Too many failed attempts."
+                                );
+                                System.out.println(
+                                        "Account locked for 1 minute."
+                                );
+                            } else {
+                                System.out.println("Please try again!!");
+                            }
                         }
+                            line = String.join(",", fields);
+
+                    }
+                        lines.add(line);
                     }
                     fileScanner.close();
+
+                    FileWriter writer = new FileWriter(file);
+
+                    for (String line : lines) {
+                        writer.write(line + "\n");
+                    }
+
+                    writer.close();
 
                     if (loggedIn) {
                         System.out.println("You are logged in");
@@ -67,31 +140,23 @@ public class Login {
 
                         BankAccount.main(new String[]{});
 
-//                        loggedInUser.displayBankAccounts();
                         break;
-                    } else {
-                        incorrectLogin++;
-                        System.out.println("Incorrect email or password");
-                        System.out.println("Please try again!!");
-                        if (incorrectLogin == 3) {
-                            System.out.println("try to login after 1 min");
-
-                            Thread.sleep(60 * 1000);
-
-                            incorrectLogin = 0;
-                        }
-
                     }
+
+                    if (!emailFound) {
+                        System.out.println("Incorrect email or password");
+                    }
+
                 } catch (FileNotFoundException e) {
                     System.out.println("Error reading accounts file.");
-
                 }
+
             } else {
                 System.out.println("No accounts have been created yet.");
             }
         }
-        scanner.close();
 
+        scanner.close();
     }
 
     public int displayBankAccounts() {
