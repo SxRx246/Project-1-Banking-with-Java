@@ -1,6 +1,6 @@
 package bankingSystem;
 
-public class User {
+public abstract class User {
     private String firstName;
     private String lastName;
     private String email;
@@ -22,4 +22,6 @@ public class User {
     public String getEmail() {
         return email;
     }
+
+    public abstract void displayMenu();
 }
