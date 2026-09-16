@@ -5,23 +5,6 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class SignUp {
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
-    private String role;
-    private int failedAttempts;
-    private LocalDateTime lockedUntil;
-
-    public SignUp(String firstName, String lastName, String email, String password, int failedAttempts, LocalDateTime lockedUntil) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-        role = "Customer";
-        this.failedAttempts = failedAttempts;
-        this.lockedUntil = lockedUntil;
-    }
 
 
     public static void main(String[] args) {
@@ -146,19 +129,19 @@ public class SignUp {
 
                         LocalDateTime lockedUntil = null;
 
-                        SignUp account = new SignUp(firstName, lastName, email, hashedPassword, 0, lockedUntil);
+                        Customer customer = new Customer(firstName, lastName, email);
 
                         FileWriter writer = new FileWriter("accounts.txt", true);
 
                         writer.write(
-                                account.firstName + "," +
-                                        account.lastName + "," +
-                                        account.email + "," +
+                                customer.getFirstName() + "," +
+                                        customer.getLastName() + "," +
+                                        customer.getEmail() + "," +
                                         saltString + "," +
                                         hashedPassword + "," +
-                                        account.role + "," +
-                                        account.failedAttempts + "," +
-                                        account.lockedUntil
+                                        "Customer," +
+                                        "0," +
+                                        ""
                         );
 
                         writer.write("\n");

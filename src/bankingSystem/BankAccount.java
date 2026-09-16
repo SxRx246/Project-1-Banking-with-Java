@@ -92,7 +92,6 @@ public class BankAccount {
     private String email;
     private int overdraftCount;
 
-    Scanner scanner = new Scanner(System.in);
 
     public BankAccount(String email, int accountNumber, double balance, AccountType accountType, AccountStatus accountStatus, int overdraftCount, DebitCardType debitCardType) {
         this.email = email;
@@ -102,8 +101,6 @@ public class BankAccount {
         this.accountStatus = accountStatus;
         this.overdraftCount = overdraftCount;
         this.debitCardType = debitCardType;
-
-
     }
 
     public String getUserEmail() {
@@ -150,6 +147,8 @@ public class BankAccount {
     public void setBalance(double balance) {
         this.balance = balance;
     }
+
+
 
     public static boolean withdrawMoney(double amount, BankAccount bankAccount) {
         if (bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {

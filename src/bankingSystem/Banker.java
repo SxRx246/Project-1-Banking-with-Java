@@ -1,9 +1,12 @@
 package bankingSystem;
 
-public class Banker extends Person{
-    public Banker(String firstName, String lastName, String role) {
-        super(firstName, lastName);
-    }
+public class Banker extends User{
+    private String firstName;
+    private String lastName;
+    private String email;
 
+    public Banker(String firstName, String lastName, String email) {
+        super(firstName, lastName, email);
+    }
 
 }

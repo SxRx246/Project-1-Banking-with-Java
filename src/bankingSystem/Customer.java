@@ -2,16 +2,14 @@ package bankingSystem;
 
 import java.util.HashMap;
 
-public class Customer extends Person {
+public class Customer extends User {
 
-    //Customers may have a checking account, a savings account, or both.
-//    <accountType , accountAmount>
-//    HashMap<String,Double> accounts = new HashMap<>();
+    private String firstName;
+    private String lastName;
+    private String email;
 
-    public Customer(String firstName, String lastName, String role) {
-        super(firstName, lastName);
-        //        this.accounts = accounts;
+    public Customer(String firstName, String lastName, String email) {
+        super(firstName, lastName, email);
     }
-
 
 }
