@@ -68,35 +68,13 @@ public class SignUp {
                     System.out.println("Invalid email address.");
                     continue;
                 }
-                boolean emailExists = false;
 
-                try {
-                    File file = new File("accounts.txt");
-
-                    if (file.exists()) {
-                        Scanner fileScanner = new Scanner(file);
-
-                        while (fileScanner.hasNextLine()) {
-                            String line = fileScanner.nextLine();
-
-                            String existingEmail = line.split(",")[2];
-
-                            if (existingEmail.equalsIgnoreCase(email)) {
-                                emailExists = true;
-                                break;
-                            }
-                        }
-                        fileScanner.close();
-                    }
-                } catch (FileNotFoundException e) {
-                    System.out.println("Error accessing account file.");
-                    continue;
-                }
-                if (emailExists) {
+                if (UserFile.emailExists(email)) {
                     System.out.println("Email already been used." +
                             "\nPlease enter another email");
                     continue;
                 }
+
                 break;
             }
             while (true) {
@@ -127,27 +105,10 @@ public class SignUp {
                         String saltString =
                                 java.util.HexFormat.of().formatHex(salt);
 
-                        LocalDateTime lockedUntil = null;
 
                         Customer customer = new Customer(firstName, lastName, email);
 
-                        FileWriter writer = new FileWriter("accounts.txt", true);
-
-                        writer.write(
-                                customer.getFirstName() + "," +
-                                        customer.getLastName() + "," +
-                                        customer.getEmail() + "," +
-                                        saltString + "," +
-                                        hashedPassword + "," +
-                                        "Customer," +
-                                        "0," +
-                                        ""
-                        );
-
-                        writer.write("\n");
-
-
-                        writer.close();
+                        UserFile.saveUser(customer, saltString, hashedPassword);
 
                         signupSuccessful = true;
                         System.out.println("Your account has been created!");
@@ -163,7 +124,7 @@ public class SignUp {
             }
         }
 
-        if(hasAccount || signupSuccessful){
+        if (hasAccount || signupSuccessful) {
             Login.main(new String[]{});
         }
 
