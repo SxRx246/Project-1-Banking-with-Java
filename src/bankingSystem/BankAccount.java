@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Random;
 
+
 public class BankAccount {
     public enum AccountType {
         CHECKING,
@@ -152,28 +153,6 @@ public class BankAccount {
         this.balance = balance;
     }
 
-    public static void addingAccountTofile(BankAccount bankAccount) {
-        try {
-            FileWriter writer = new FileWriter("bankAccounts.txt", true);
-            writer.write(
-                    bankAccount.getAccountNumber() + "," +
-                            bankAccount.getUserEmail() + "," +
-                            bankAccount.getBalance() + "," +
-                            bankAccount.getAccountType() + "," +
-                            bankAccount.getAccountStatus() + "," +
-                            bankAccount.getOverdraftCount() + "," +
-                            bankAccount.getDebitCardType()
-            );
-
-            writer.write("\n");
-            writer.close();
-            System.out.println("The account has been created");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static boolean withdrawMoney(double amount, BankAccount bankAccount) {
         if (bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
             System.out.println("Withdrawal failed. Your account is deactivated.");
@@ -196,11 +175,6 @@ public class BankAccount {
             return false;
         } else {
 
-//            System.out.println("You have only " + currentBalance + " in your account, your account will be overdraft ");
-//        }
-//        else if (currentBalance >= amount) {
-
-
             if (newBalance < 0) {
                 overdraftCount++;
                 newBalance -= 35;
@@ -215,100 +189,14 @@ public class BankAccount {
             bankAccount.setBalance(newBalance);
             bankAccount.setOverdraftCount(overdraftCount);
 
-            File file = new File("bankAccounts.txt");
+            BankAccountFile.updateAccount(bankAccount);
 
-            if (file.exists()) {
-                try {
-                    Scanner fileScanner = new Scanner(file);
-                    ArrayList<String> lines = new ArrayList<>();
+            System.out.println("Successful Withdraw of " + amount + " BD");
+            System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
 
-                    while (fileScanner.hasNextLine()) {
-                        String line = fileScanner.nextLine();
-
-                        String[] fields = line.split(",");
-                        if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
-                            fields[2] = String.valueOf(bankAccount.getBalance());
-                            fields[4] = String.valueOf(bankAccount.getAccountStatus());
-                            fields[5] = String.valueOf(bankAccount.getOverdraftCount());
-                            line = String.join(",", fields);
-                        }
-                        lines.add(line);
-                    }
-                    fileScanner.close();
-
-                    FileWriter writer = new FileWriter(file);
-
-                    for (String line : lines) {
-                        writer.write(line + "\n");
-                    }
-
-                    writer.close();
-
-                    System.out.println("Successful Withdraw of " + amount + " BD");
-                    System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
             return true;
         }
     }
-
-//    public static boolean depositMoney(double amount, BankAccount bankAccount) {
-//        if (amount <= 0) {
-//            System.out.println("Please enter a valid deposit amount.");
-//            return false;
-//        }
-//
-//        double currentBalance = bankAccount.getBalance();
-//        double newBalance;
-//
-//        newBalance = currentBalance + amount;
-//        bankAccount.setBalance(newBalance);
-//
-//        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
-//            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
-//            bankAccount.setOverdraftCount(0);
-//            System.out.println("Account has been reactivated");
-//        }
-//
-//        File file = new File("bankAccounts.txt");
-//
-//        if (file.exists()) {
-//            try {
-//                Scanner fileScanner = new Scanner(file);
-//                ArrayList<String> lines = new ArrayList<>();
-//
-//                while (fileScanner.hasNextLine()) {
-//                    String line = fileScanner.nextLine();
-//
-//                    String[] fields = line.split(",");
-//                    if (fields[0].equals(String.valueOf(bankAccount.getAccountNumber()))) {
-//                        fields[2] = String.valueOf(bankAccount.getBalance());
-//                        fields[4] = String.valueOf(bankAccount.getAccountStatus());
-//                        fields[5] = String.valueOf(bankAccount.getOverdraftCount());
-//                        line = String.join(",", fields);
-//                    }
-//                    lines.add(line);
-//                }
-//                fileScanner.close();
-//
-//                FileWriter writer = new FileWriter(file);
-//
-//                for (String line : lines) {
-//                    writer.write(line + "\n");
-//                }
-//
-//                writer.close();
-//
-//                System.out.println("Successful Deposit of " + amount + " BD");
-//                System.out.println("Balance now in account " + bankAccount.getAccountNumber() + " is " + bankAccount.getBalance());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return true;
-//    }
 
     public static boolean depositMoney(double amount, int accountNumber) {
         if (amount <= 0) {
@@ -318,61 +206,29 @@ public class BankAccount {
 
         double newBalance = 0;
 
+        BankAccount bankAccount = BankAccountFile.findAccount(accountNumber);
 
-        File file = new File("bankAccounts.txt");
+        double currentBalance = bankAccount.getBalance();
 
-        if (file.exists()) {
-            try {
-                Scanner fileScanner = new Scanner(file);
-                ArrayList<String> lines = new ArrayList<>();
-
-                while (fileScanner.hasNextLine()) {
-                    String line = fileScanner.nextLine();
-
-                    String[] fields = line.split(",");
-                    if (fields[0].equals(String.valueOf(accountNumber))) {
-                        String email = String.valueOf(fields[1]);
-                        double balance = Double.parseDouble(fields[2]);
-                        AccountType accountType = AccountType.valueOf(fields[3]);
-                        AccountStatus accountStatus = AccountStatus.valueOf(fields[4]);
-                        int overdraftCount = Integer.parseInt(fields[5]);
-                        DebitCardType debitCardType = DebitCardType.valueOf(fields[6]);
-                        BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraftCount, debitCardType);
-
-                        double currentBalance = bankAccount.getBalance();
-
-                        newBalance = currentBalance + amount;
-                        bankAccount.setBalance(newBalance);
-
-                        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
-                            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
-                            bankAccount.setOverdraftCount(0);
-                            System.out.println("Account has been reactivated");
-                        }
-
-                        fields[2] = String.valueOf(bankAccount.getBalance());
-                        fields[4] = String.valueOf(bankAccount.getAccountStatus());
-                        fields[5] = String.valueOf(bankAccount.getOverdraftCount());
-                        line = String.join(",", fields);
-                    }
-                    lines.add(line);
-                }
-                fileScanner.close();
-
-                FileWriter writer = new FileWriter(file);
-
-                for (String line : lines) {
-                    writer.write(line + "\n");
-                }
-
-                writer.close();
-
-                System.out.println("Successful Deposit of " + amount + " BD");
-                System.out.println("Balance now in account " + accountNumber + " is " + newBalance);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (bankAccount == null) {
+            System.out.println("Deposit failed. The account number you entered does not exist.");
+            return false;
         }
+
+        newBalance = currentBalance + amount;
+        bankAccount.setBalance(newBalance);
+
+        if (newBalance >= 0 && bankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            bankAccount.setAccountStatus(AccountStatus.ACTIVE);
+            bankAccount.setOverdraftCount(0);
+            System.out.println("Account has been reactivated");
+        }
+
+        BankAccountFile.updateAccount(bankAccount);
+
+        System.out.println("Successful Deposit of " + amount + " BD");
+        System.out.println("Balance now in account " + accountNumber + " is " + newBalance);
+
         return true;
     }
 
@@ -387,86 +243,47 @@ public class BankAccount {
             return false;
         }
 
+        BankAccount toBankAccount = BankAccountFile.findAccount(accountNumber);
+        if (toBankAccount == null) {
+            System.out.println("Transfer failed. The account number you entered does not exist.");
+            return false;
+        }
+
         double myCurrentBalance = myBankAccount.getBalance();
         double myBalance;
 
         if (amount <= 0) {
             System.out.println("please enter valid amount");
             return false;
-        } else if (myCurrentBalance < amount) {
+        }
+
+        if (myCurrentBalance < amount) {
             System.out.println("Transfer failed. You don't have enough balance.");
             System.out.println("You have only " + myCurrentBalance + " in your account");
             return false;
-        } else if (myCurrentBalance >= amount) {
-
-            File file = new File("bankAccounts.txt");
-
-            if (file.exists()) {
-                try {
-                    Scanner fileScanner = new Scanner(file);
-                    ArrayList<String> lines = new ArrayList<>();
-
-                    boolean isAccountNumberExist = false;
-                    while (fileScanner.hasNextLine()) {
-                        String line = fileScanner.nextLine();
-
-                        String[] fields = line.split(",");
-                        if (fields[0].equals(String.valueOf(accountNumber))) {
-                            isAccountNumberExist = true;
-                        }
-                    }
-                    fileScanner.close();
-
-                    if (!isAccountNumberExist) {
-                        System.out.println("Transfer failed. The account number you entered does not exist.");
-                        return false;
-                    }
-                    myBalance = myCurrentBalance - amount;
-                    myBankAccount.setBalance(myBalance);
-
-                    fileScanner = new Scanner(file);
-
-                    while (fileScanner.hasNextLine()) {
-                        String line = fileScanner.nextLine();
-
-                        String[] fields = line.split(",");
-                        if (fields[0].equals(String.valueOf(myBankAccount.getAccountNumber()))) {
-                            fields[2] = String.valueOf(myBankAccount.getBalance());
-                            line = String.join(",", fields);
-                        } else if (fields[0].equals(String.valueOf(accountNumber))) {
-                            double ToAccountBalance = Double.parseDouble(fields[2]);
-                            ToAccountBalance += amount;
-                            fields[2] = String.valueOf(ToAccountBalance);
-                            if (fields[4].equalsIgnoreCase("DEACTIVATED") && ToAccountBalance >= 0) {
-                                fields[4] = "ACTIVE";
-                            }
-                            line = String.join(",", fields);
-                        }
-                        lines.add(line);
-                    }
-                    fileScanner.close();
-
-                    FileWriter writer = new FileWriter(file);
-
-                    for (String line : lines) {
-                        writer.write(line + "\n");
-                    }
-
-                    writer.close();
-
-                    System.out.println("Successful Transfer of " + amount + " BD");
-                    System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
-                    return true;
-//                    } else {
-//                        System.out.println("Transfer failed. The account number you entered does not exist.");
-//                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-        return false;
+
+        myBalance = myCurrentBalance - amount;
+        myBankAccount.setBalance(myBalance);
+
+        BankAccountFile.updateAccount(myBankAccount);
+
+        double toBankAccountNewBalance = toBankAccount.getBalance();
+        toBankAccountNewBalance += amount;
+        toBankAccount.setBalance(toBankAccountNewBalance);
+
+        if (toBankAccountNewBalance >= 0 && toBankAccount.getAccountStatus() == AccountStatus.DEACTIVATED) {
+            toBankAccount.setAccountStatus(AccountStatus.ACTIVE);
+        }
+
+        BankAccountFile.updateAccount(toBankAccount);
+
+        System.out.println("Successful Transfer of " + amount + " BD");
+        System.out.println("Balance now in account " + myBankAccount.getAccountNumber() + " is " + myBankAccount.getBalance());
+        return true;
+
     }
+
 
     public void addTransactionToFile(String type, double amount) {
         try {
@@ -859,7 +676,8 @@ public class BankAccount {
 //        return true;
 //    }
 
-    public static boolean reachedLimitPerDay(int accountNumber, BankAccount bankAccount, String transactionType, double currentTransactionAmount, int targetAccountNumber) {
+    public static boolean reachedLimitPerDay(int accountNumber, BankAccount bankAccount, String
+            transactionType, double currentTransactionAmount, int targetAccountNumber) {
 
         double totalAmountWithdrawPerDay = 0;
         double totalAmountTransferPerDay = 0;
@@ -1013,75 +831,6 @@ public class BankAccount {
         return false;
     }
 
-    public static int getUserAccountCount(String email) {
-
-        int count = 0;
-
-        File file = new File("bankAccounts.txt");
-
-        if (file.exists()) {
-            try {
-                Scanner fileScanner = new Scanner(file);
-
-                while (fileScanner.hasNextLine()) {
-                    String line = fileScanner.nextLine();
-
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
-
-                    String[] fields = line.split(",");
-
-                    if (fields[1].equalsIgnoreCase(email)) {
-                        count++;
-                    }
-                }
-
-                fileScanner.close();
-
-            } catch (FileNotFoundException e) {
-                System.out.println("Error reading bank accounts.");
-            }
-        }
-
-        return count;
-    }
-
-    public static boolean hasAccountType(String email, AccountType type) {
-
-        File file = new File("bankAccounts.txt");
-
-        if (file.exists()) {
-            try {
-                Scanner fileScanner = new Scanner(file);
-
-                while (fileScanner.hasNextLine()) {
-                    String line = fileScanner.nextLine();
-
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
-
-                    String[] fields = line.split(",");
-
-                    if (fields[1].equalsIgnoreCase(email)
-                            && AccountType.valueOf(fields[3]) == type) {
-                        fileScanner.close();
-                        return true;
-                    }
-                }
-
-                fileScanner.close();
-
-            } catch (Exception e) {
-                System.out.println("Error reading bank accounts.");
-            }
-        }
-
-        return false;
-    }
-
-
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -1096,7 +845,7 @@ public class BankAccount {
 
         String addAccount;
         while (true) {
-            int numberOfAccounts = getUserAccountCount(email);
+            int numberOfAccounts = BankAccountFile.getUserAccountCount(email);
 
             if (numberOfAccounts >= 2) {
                 System.out.println("You already have 2 accounts.");
@@ -1136,8 +885,8 @@ public class BankAccount {
 //                }
 
                 while (true) {
-                    boolean hasChecking = hasAccountType(email, AccountType.CHECKING);
-                    boolean hasSavings = hasAccountType(email, AccountType.SAVINGS);
+                    boolean hasChecking = BankAccountFile.hasAccountType(email, AccountType.CHECKING);
+                    boolean hasSavings = BankAccountFile.hasAccountType(email, AccountType.SAVINGS);
 
                     System.out.println("\nChoose account type:");
 
@@ -1216,7 +965,7 @@ public class BankAccount {
                 }
                 BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
 
-                addingAccountTofile(bankAccount);
+                BankAccountFile.addingAccountTofile(bankAccount);
 //                break;
             } else if (addAccount.equalsIgnoreCase("no")) {
                 break;

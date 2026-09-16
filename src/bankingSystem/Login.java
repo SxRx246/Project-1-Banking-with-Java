@@ -98,18 +98,15 @@ public class Login {
                                     "Incorrect email or password."
                             );
 
-                            if (failedAttempts == 3) {
+                            if (failedAttempts >= 3) {
 
                                 LocalDateTime unlockTime =
                                         LocalDateTime.now().plusMinutes(1);
 
                                 fields[7] = unlockTime.toString();
-                                System.out.println(
-                                        "Too many failed attempts."
-                                );
-                                System.out.println(
-                                        "Account locked for 1 minute."
-                                );
+                                System.out.println("Too many failed attempts.");
+                                System.out.println("Account locked for 1 minute.");
+
                             } else {
                                 System.out.println("Please try again!!");
                             }
@@ -117,7 +114,7 @@ public class Login {
                             line = String.join(",", fields);
 
                     }
-                        lines.add(line);
+                            lines.add(line);
                     }
                     fileScanner.close();
 
@@ -169,10 +166,12 @@ public class Login {
                 while (fileScanner2.hasNextLine()) {
                     String line = fileScanner2.nextLine();
 
-                    String accountNumber = line.split(",")[0];
-                    String existingEmail = line.split(",")[1];
-                    String balance = String.valueOf(line.split(",")[2]);
-                    String accountType = line.split(",")[3];
+                    String[] fields = line.split(",");
+
+                    String accountNumber = fields[0];
+                    String existingEmail = fields[1];
+                    String balance = String.valueOf(fields[2]);
+                    String accountType = fields[3];
 
                     if (existingEmail.equalsIgnoreCase(this.email)) {
                         hasBankAccount = true;
