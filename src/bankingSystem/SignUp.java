@@ -1,12 +1,10 @@
 package bankingSystem;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import java.security.SecureRandom;
 import java.io.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Scanner;
+
+import static bankingSystem.PasswordUtil.hashPassword;
 
 public class SignUp {
     private String firstName;
@@ -14,30 +12,19 @@ public class SignUp {
     private String email;
     private String password;
     private String role;
-    private int failedAttemps;
+    private int failedAttempts;
     private LocalDateTime lockedUntil;
 
-    public SignUp(String firstName,String lastName,String email, String password,int failedAttemps, LocalDateTime lockedUntil ) {
+    public SignUp(String firstName,String lastName,String email, String password,int failedAttempts, LocalDateTime lockedUntil ) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         role = "Customer";
-        this.failedAttemps = failedAttemps;
+        this.failedAttempts = failedAttempts;
         this.lockedUntil = lockedUntil;
     }
 
-    public static String hashPassword(String password, byte[] salt) throws Exception {
-        PBEKeySpec spec =
-                new PBEKeySpec(password.toCharArray(), salt, 10000, 256);
-
-        SecretKeyFactory factory =
-                SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-
-        return java.util.HexFormat.of().formatHex(
-                factory.generateSecret(spec).getEncoded()
-        );
-    }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -74,7 +61,7 @@ public class SignUp {
                         if (existingEmail.equals(email)) {
                             System.out.println("Email already been used.");
                             fileScanner.close();
-                            break;
+                            continue;
 //                            return;
                         }
                     }
@@ -95,24 +82,20 @@ public class SignUp {
                             "Password must be at least 8 characters " +
                                     "and contain uppercase, lowercase, a number, and a special character."
                     );
-
-//                    scanner.close();
-//                    return;
                     continue;
                 }
                 System.out.print("Confirmed Password: ");
                 String confirmedPassword = scanner.nextLine();
 
                 if (password.equals(confirmedPassword)) {
-                    byte[] salt = new byte[16];
-                    new SecureRandom().nextBytes(salt);
+                    byte[] salt = PasswordUtil.generateSalt();
 
                     String hashedPassword = hashPassword(password, salt);
 
                     String saltString =
                             java.util.HexFormat.of().formatHex(salt);
 
-                    LocalDateTime lockedUntil = LocalDateTime.now();
+                    LocalDateTime lockedUntil = null;
 
                     SignUp account = new SignUp(firstName,lastName, email, hashedPassword, 0, lockedUntil);
 
@@ -125,7 +108,7 @@ public class SignUp {
                                     saltString + "," +
                                     hashedPassword + "," +
                                     account.role + "," +
-                                    account.failedAttemps + "," +
+                                    account.failedAttempts + "," +
                                     account.lockedUntil
                     );
 

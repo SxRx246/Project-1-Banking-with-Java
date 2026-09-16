@@ -55,7 +55,6 @@ public class Login {
                             int failedAttempts = Integer.parseInt(fields[6]);
                             String lockedUntil = fields[7];
 
-                            // Check if account is locked
                             if (!lockedUntil.isEmpty()) {
 
                                 LocalDateTime unlockTime =
@@ -83,7 +82,7 @@ public class Login {
                                     java.util.HexFormat.of().parseHex(salt);
 
                             String enteredPasswordHash =
-                                    SignUp.hashPassword(password, saltBytes);
+                                    PasswordUtil.hashPassword(password, saltBytes);
 
                             if (enteredPasswordHash.equals(hashedPassword)) {
                                 loggedIn = true;
