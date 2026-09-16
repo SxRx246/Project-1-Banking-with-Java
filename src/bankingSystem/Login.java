@@ -17,7 +17,7 @@ public class Login {
         return email;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args){
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -55,7 +55,7 @@ public class Login {
                             int failedAttempts = Integer.parseInt(fields[6]);
                             String lockedUntil = fields[7];
 
-                            if (!lockedUntil.isEmpty()) {
+                            if (!lockedUntil.isEmpty() && !lockedUntil.equalsIgnoreCase("null")) {
 
                                 LocalDateTime unlockTime =
                                         LocalDateTime.parse(lockedUntil);
@@ -146,8 +146,8 @@ public class Login {
                         System.out.println("Incorrect email or password");
                     }
 
-                } catch (FileNotFoundException e) {
-                    System.out.println("Error reading accounts file.");
+                } catch (Exception e) {
+                    System.out.println("Error during login.");
                 }
 
             } else {

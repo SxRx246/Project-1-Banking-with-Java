@@ -4,8 +4,6 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.Scanner;
 
-import static bankingSystem.PasswordUtil.hashPassword;
-
 public class SignUp {
     private String firstName;
     private String lastName;
@@ -15,7 +13,7 @@ public class SignUp {
     private int failedAttempts;
     private LocalDateTime lockedUntil;
 
-    public SignUp(String firstName,String lastName,String email, String password,int failedAttempts, LocalDateTime lockedUntil ) {
+    public SignUp(String firstName, String lastName, String email, String password, int failedAttempts, LocalDateTime lockedUntil) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -29,47 +27,97 @@ public class SignUp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean signupSuccessful = false;
+
+        boolean hasAccount = false;
         while (true) {
-        System.out.println("------Sign up------");
-            System.out.print("First Name: ");
-            String firstName = scanner.nextLine();
+            System.out.print("Do you have an account (yes or no): ");
+            String input = scanner.nextLine();
+            System.out.println();
 
-            System.out.print("Last Name: ");
-            String lastName = scanner.nextLine();
-
-            System.out.print("Email: ");
-            String email = scanner.nextLine();
-
-            if(!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")){
-                System.out.println("Invalid email address.");
+            if (input.equalsIgnoreCase("yes")) {
+                hasAccount = true;
+                break;
+            } else if (input.equalsIgnoreCase("no")) {
+                break;
+            } else {
+                System.out.println("please enter yes or no");
                 continue;
             }
+        }
 
-            try {
-                File file = new File("accounts.txt");
+        if (!hasAccount) {
+            System.out.println("------Sign up------");
 
+            String firstName;
+
+            while (true) {
+                System.out.print("First Name: ");
+                firstName = scanner.nextLine();
+
+                if (!firstName.matches("[A-Za-z]+")) {
+                    System.out.println("First name must contain letters only.");
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            String lastName;
+            while (true) {
+                System.out.print("\nLast Name: ");
+                lastName = scanner.nextLine();
+
+                if (!lastName.matches("[A-Za-z]+")) {
+                    System.out.println("Last name must contain letters only.");
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            String email;
+
+            while (true) {
+                System.out.print("\nEmail: ");
+                email = scanner.nextLine();
+
+                if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                    System.out.println("Invalid email address.");
+                    continue;
+                }
                 boolean emailExists = false;
 
-                if (file.exists()) {
-                    Scanner fileScanner = new Scanner(file);
+                try {
+                    File file = new File("accounts.txt");
 
-                    while (fileScanner.hasNextLine()) {
-                        String line = fileScanner.nextLine();
+                    if (file.exists()) {
+                        Scanner fileScanner = new Scanner(file);
 
-                        String existingEmail = line.split(",")[2];
+                        while (fileScanner.hasNextLine()) {
+                            String line = fileScanner.nextLine();
 
-                        if (existingEmail.equals(email)) {
-                            System.out.println("Email already been used.");
-                            fileScanner.close();
-                            continue;
-//                            return;
+                            String existingEmail = line.split(",")[2];
+
+                            if (existingEmail.equalsIgnoreCase(email)) {
+                                emailExists = true;
+                                break;
+                            }
                         }
+                        fileScanner.close();
                     }
-
-                    fileScanner.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("Error accessing account file.");
+                    continue;
                 }
-
-                System.out.print("Password: ");
+                if (emailExists) {
+                    System.out.println("Email already been used." +
+                            "\nPlease enter another email");
+                    continue;
+                }
+                break;
+            }
+            while (true) {
+                System.out.print("\nPassword: ");
                 String password = scanner.nextLine();
 
                 if (password.length() < 8 ||
@@ -79,7 +127,7 @@ public class SignUp {
                         !password.matches(".*[0-9].*")) {
 
                     System.out.println(
-                            "Password must be at least 8 characters " +
+                            "Password must be at least 8 characters\n " +
                                     "and contain uppercase, lowercase, a number, and a special character."
                     );
                     continue;
@@ -88,53 +136,54 @@ public class SignUp {
                 String confirmedPassword = scanner.nextLine();
 
                 if (password.equals(confirmedPassword)) {
-                    byte[] salt = PasswordUtil.generateSalt();
+                    try {
+                        byte[] salt = PasswordUtil.generateSalt();
 
-                    String hashedPassword = hashPassword(password, salt);
+                        String hashedPassword = PasswordUtil.hashPassword(password, salt);
 
-                    String saltString =
-                            java.util.HexFormat.of().formatHex(salt);
+                        String saltString =
+                                java.util.HexFormat.of().formatHex(salt);
 
-                    LocalDateTime lockedUntil = null;
+                        LocalDateTime lockedUntil = null;
 
-                    SignUp account = new SignUp(firstName,lastName, email, hashedPassword, 0, lockedUntil);
+                        SignUp account = new SignUp(firstName, lastName, email, hashedPassword, 0, lockedUntil);
 
-                    FileWriter writer = new FileWriter("accounts.txt", true);
+                        FileWriter writer = new FileWriter("accounts.txt", true);
 
-                    writer.write(
-                            account.firstName + "," +
-                            account.lastName + "," +
-                            account.email + "," +
-                                    saltString + "," +
-                                    hashedPassword + "," +
-                                    account.role + "," +
-                                    account.failedAttempts + "," +
-                                    account.lockedUntil
-                    );
+                        writer.write(
+                                account.firstName + "," +
+                                        account.lastName + "," +
+                                        account.email + "," +
+                                        saltString + "," +
+                                        hashedPassword + "," +
+                                        account.role + "," +
+                                        account.failedAttempts + "," +
+                                        account.lockedUntil
+                        );
 
-                    writer.write("\n");
+                        writer.write("\n");
 
 
-                    writer.close();
+                        writer.close();
 
-                    signupSuccessful = true;
-                    System.out.println("Your account has been created!");
+                        signupSuccessful = true;
+                        System.out.println("Your account has been created!");
+                        break;
+                    } catch (Exception e) {
+                        System.out.println("Error creating account.");
+                    }
 
                 } else {
                     System.out.println("Passwords do not match");
                     continue;
                 }
-
-            } catch (Exception e) {
-                System.out.println("Error accessing account file.");
-                continue;
             }
-
-
-        if (signupSuccessful) {
-            break;
         }
+
+        if(hasAccount || signupSuccessful){
+            Login.main(new String[]{});
         }
-            scanner.close();
+
     }
 }
+
