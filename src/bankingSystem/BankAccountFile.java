@@ -86,7 +86,7 @@ public class BankAccountFile {
         }
     }
 
-    public static void addingAccountTofile(bankingSystem.BankAccount bankAccount) {
+    public static void addingAccountToFile(bankingSystem.BankAccount bankAccount) {
         try {
             FileWriter writer = new FileWriter("bankAccounts.txt", true);
             writer.write(

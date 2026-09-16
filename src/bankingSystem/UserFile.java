@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class UserFile {
@@ -39,6 +40,42 @@ public class UserFile {
         }
         return false;
 
+    }
+
+    public static Optional<String[]> findUser(String email) {
+
+        File file = new File("accounts.txt");
+
+        try {
+            if (file.exists()) {
+                Scanner fileScanner = new Scanner(file);
+
+                while (fileScanner.hasNextLine()) {
+
+                    String line = fileScanner.nextLine();
+
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    String[] fields = line.split(",", -1);
+
+                    String existingEmail = fields[2];
+
+                    if (fields.length > 2 && existingEmail.equalsIgnoreCase(email)) {
+                        fileScanner.close();
+                        return Optional.of(fields);
+                    }
+                }
+
+                fileScanner.close();
+
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Error accessing account file.");
+        }
+
+        return Optional.empty();
     }
 
     public static void saveUser(Customer customer, String salt, String hashedPassword) {

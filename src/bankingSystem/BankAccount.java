@@ -416,8 +416,8 @@ public class BankAccount {
                 }
                 BankAccount bankAccount = new BankAccount(email, accountNumber, balance, accountType, accountStatus, overdraft, debitCardType);
 
-                BankAccountFile.addingAccountTofile(bankAccount);
-//                break;
+                BankAccountFile.addingAccountToFile(bankAccount);
+
             } else if (addAccount.equalsIgnoreCase("no")) {
                 break;
             } else {
