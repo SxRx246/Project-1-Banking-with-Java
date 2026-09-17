@@ -72,7 +72,6 @@ public class Login {
                                     continue;
                                 }
 
-                                // 1 minute has passed
                                 failedAttempts = 0;
                                 fields[6] = "0";
                                 fields[7] = "";

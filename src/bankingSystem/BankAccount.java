@@ -2,17 +2,10 @@ package bankingSystem;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Random;
 
@@ -316,24 +309,6 @@ public class BankAccount {
             DebitCardType debitCardType = null;
 
             if (addAccount.equalsIgnoreCase("yes")) {
-
-
-//                while (true) {
-//                    System.out.println("Account Type Checking or Saving?(Enter C or S)");
-//                    char checkAccountType = scanner.next().charAt(0);
-//                    scanner.nextLine();
-//
-//                    if (checkAccountType == 'c' || checkAccountType == 'C') {
-//                        accountType = AccountType.CHECKING;
-//                        break;
-//                    } else if (checkAccountType == 's' || checkAccountType == 'S') {
-//                        accountType = AccountType.SAVINGS;
-//                        break;
-//                    } else {
-//                        System.out.println("please enter a valid account type whether 'C' for Checking or 'S' for Saving");
-//                        continue;
-//                    }
-//                }
 
                 while (true) {
                     boolean hasChecking = BankAccountFile.hasAccountType(email, AccountType.CHECKING);

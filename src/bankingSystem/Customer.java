@@ -1,7 +1,5 @@
 package bankingSystem;
 
-import java.util.HashMap;
-
 public class Customer extends User {
 
     private String firstName;
